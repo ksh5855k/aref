@@ -25,15 +25,37 @@
         <p>우리 서비스의 잠재 고객이 겪는 문제점을 먼저 언급하고, 그 해결책으로 우리 서비스를 제시하는 콘텐츠를 만들어 볼 수 있다.</p>
 
         <div class="button-wrapper">
-    <a href="https://www.wezhawes.com/ikea-sleep-ship" target="_blank" class="external-link">자세한 내용 확인하기</a>
-    <a href="index.html" class="back-to-list">목록으로 돌아가기</a>
-</div>
+            <a href="https://www.wezhawes.com/ikea-sleep-ship" target="_blank" class="external-link">자세한 내용 확인하기</a>
+            <a href="index.html" class="back-to-list">목록으로 돌아가기</a>
+        </div>
     </div>
 
     <footer>
         <p>&copy;2025 A!Ref. All Rights Reserved</p>
     </footer>
-<script src="data.js"></script>
-<script src="detail.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+            const firebaseConfig = {
+            apiKey: "AIzaSyDiUQNv9O9pLc7m6PG2trFeQfCocnLgAMs",
+            authDomain: "aref-project-8dee3.firebaseapp.com",
+            projectId: "aref-project-8dee3",
+            storageBucket: "aref-project-8dee3.firebasestorage.app",
+            messagingSenderId: "62995136962",
+            appId: "1:62995136962:web:a9c0ae029c1e2e362d965b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.db = db;
+        window.firebaseUtils = { collection, getDocs, query, where, orderBy };
+    
+    </script>
+    <script src="script.js"></script>
 </body>
 </html>
