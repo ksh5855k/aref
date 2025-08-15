@@ -157,3 +157,10 @@ a {
     border-radius: 5px;
     font-weight: bold;
 }
+
+.loading-indicator {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.2em;
+    color: #888;
+}
