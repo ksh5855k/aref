@@ -28,6 +28,8 @@ a.reference-card{
 
 .reference-card img {
     width: 100%;
+    height: 200px;
+    object-fit: cover;
     border-radius: 4px;
     margin-bottom: 15px;
 }
@@ -72,4 +74,86 @@ footer {
 a {
     text-decoration: none;
     color: inherit;
+}
+
+.detail-content {
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.detail-content img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.detail-content h3 {
+    margin-top: 30px;
+    border-left: 4px solid #FB3959;
+    padding-left: 10px;
+}
+
+.back-to-list {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #FB3959;
+    color: white;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.card-content {
+    padding: 15px;
+}
+
+.category-badge {
+    display: inline-block;
+    background-color: #f0f0f0;
+    color: #555;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.summary {
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
+    margin-top: 10px;
+}
+
+.tags-wrapper {
+    margin-top: 15px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+.tag {
+    display: inline-block;
+    background-color: #ffe7eb;
+    color: #FB3959;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.button-wrapper {
+    margin-top: 40px;
+    display: flex;
+    gap: 10px;
+}
+
+.external-link  {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    color: #333;
+    border-radius: 5px;
+    font-weight: bold;
 }
