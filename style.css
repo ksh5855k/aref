@@ -42,10 +42,11 @@ a.reference-card{
 }
 
 header {
-    padding: 20px;
-    margin-bottom: 30px;
+    display: flex; 
+    justify-content: space-between;
+    align-items: center; 
+    padding: 20px 5%; 
     border-bottom: 1px solid #e0e0e0;
-    text-align: center;
 }
 
 header h1 {
@@ -199,4 +200,33 @@ a {
 
 #signup-btn {
     background-color: #888;
+}
+
+.form-container button:hover,
+.button-wrapper a:hover {
+    opacity: 0.9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
+}
+
+.logo-link h1 {
+    margin: 0;
+}
+
+#auth-container button {
+    padding: 8px 16px;
+    border: 1px solid #FB3959;
+    border-radius: 4px;
+    color: #FB3959;
+    background-color: white;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+#auth-container button:hover {
+    background-color: #FB3959;
+    color: white;
+    transition: all 0.2s ease;
 }
