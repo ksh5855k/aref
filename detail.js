@@ -1,7 +1,15 @@
-const db = window.db;
-const { collection, getDocs, query, where } = window.firebaseUtils;
+import { app } from './config.js';
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+const db = getFirestore(app);
 
 async function fetchReferenceDetail() {
+    const detailContent = document.querySelector('.detail-content');
+
+    if (!detailContent) {
+        return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const id = parseInt(urlParams.get('id'));
 
@@ -10,7 +18,6 @@ async function fetchReferenceDetail() {
 
     if (!querySnapshot.empty) {
         const ref = querySnapshot.docs[0].data();
-        const detailContent = document.querySelector('.detail-content');
         const contentHTML = `
             <h2>${ref.title}</h2>
             <img src="${ref.image}" alt="${ref.title} 이미지">
@@ -27,6 +34,8 @@ async function fetchReferenceDetail() {
         `;
         detailContent.innerHTML = contentHTML;
         document.title = `${ref.title} - A!Ref`;
+    } else {
+        detailContent.innerHTML = `<p>해당 데이터를 찾을 수 없습니다.</p>`;
     }
 }
 

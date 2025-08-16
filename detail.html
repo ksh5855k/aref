@@ -19,27 +19,7 @@
         <p>&copy;2025 A!Ref. All Rights Reserved</p>
     </footer>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
-        // Your web app's Firebase configuration
-            const firebaseConfig = {
-            apiKey: "AIzaSyDiUQNv9O9pLc7m6PG2trFeQfCocnLgAMs",
-            authDomain: "aref-project-8dee3.firebaseapp.com",
-            projectId: "aref-project-8dee3",
-            storageBucket: "aref-project-8dee3.firebasestorage.app",
-            messagingSenderId: "62995136962",
-            appId: "1:62995136962:web:a9c0ae029c1e2e362d965b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        window.db = db;
-        window.firebaseUtils = { collection, getDocs, query, where, orderBy };
-    
-    </script>
+    <script type="module" src="config.js"></script>
     <script type="module" src="detail.js"></script>
 </body>
 </html>
