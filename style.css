@@ -230,3 +230,15 @@ a {
     color: white;
     transition: all 0.2s ease;
 }
+
+.show-password-container {
+    display: block;
+    text-align: right;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.show-password-container input {
+    vertical-align: middle;
+}
