@@ -8,15 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password');
     const loginBtn = document.getElementById('login-btn');
     const signupBtn = document.getElementById('signup-btn');
-    const showPasswordCheckbox = document.getElementById('show-password');
-
-    showPasswordCheckbox.addEventListener('change', () => {
-        if (showPasswordCheckbox.checked) {
-            passwordInput.type = 'text';
-        } else {
-            passwordInput.type = 'password';
-        }
-    });
     
 });
 

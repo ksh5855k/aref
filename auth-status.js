@@ -9,6 +9,7 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         // 사용자가 로그인한 경우
         authContainer.innerHTML = `
+            <a href="mypage.html" class="my-drawer-link">내 서랍</a>
             <button id="logout-btn">로그아웃</button>
         `;
         const logoutBtn = document.getElementById('logout-btn');
