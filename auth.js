@@ -1,16 +1,22 @@
+// auth.js (진짜 최종 수정본)
+
+// import 구문은 반드시 파일 최상단에 있어야 합니다.
 import { app } from './config.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-document.addEventListener('DOMContentLoaded', () => {
-    const auth = getAuth(app);
+// Firebase 인증 서비스를 초기화합니다.
+const auth = getAuth(app);
 
+// HTML 문서 로딩이 끝나면 실행될 코드
+document.addEventListener('DOMContentLoaded', () => {
+
+    // HTML 요소들을 가져옵니다.
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const loginBtn = document.getElementById('login-btn');
     const signupBtn = document.getElementById('signup-btn');
-    
-});
 
+    // 회원가입 버튼 클릭 이벤트
     signupBtn.addEventListener('click', () => {
         const email = emailInput.value;
         const password = passwordInput.value;
@@ -30,10 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     errorMessage = "올바른 이메일 형식이 아닙니다.";
                 }
                 alert(errorMessage);
-                console.error("회원가입 에러:", error);
             });
     });
 
+    // 로그인 버튼 클릭 이벤트
     loginBtn.addEventListener('click', () => {
         const email = emailInput.value;
         const password = passwordInput.value;
@@ -49,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     errorMessage = "이메일 또는 비밀번호가 올바르지 않습니다.";
                 }
                 alert(errorMessage);
-                console.error("로그인 에러:", error);
             });
     });
+
+});

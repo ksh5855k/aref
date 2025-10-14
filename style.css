@@ -312,3 +312,21 @@ footer {
     font-size: 1.2em;
     color: #888;
 }
+
+
+.delete-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+    transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+    transform: scale(1.1);
+    border-color: #ff4d4d;
+}
