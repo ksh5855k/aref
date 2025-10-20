@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>레퍼런스 수정하기 - A!Ref</title>
+    <title>레퍼런스 수정하기 - A!Ref (아!레프)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,21 +11,15 @@
         <div class="header-left">
             <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
         </div>
-        <div id="auth-container">
-            </div>
+        <div id="auth-container"></div>
     </header>
 
-    <div class="upload-container">
-        <h2>레퍼런스 수정하기</h2>
-        <form id="upload-form">
-            <input type="text" id="upload-category" placeholder="카테고리 (예: SNS 캠페인)" required>
+    <div class="upload-container"> <h2>레퍼런스 수정하기</h2>
+        <form id="upload-form"> <input type="text" id="upload-category" placeholder="카테고리 (예: SNS 캠페인)" required>
             <input type="text" id="upload-title" placeholder="레퍼런스 제목" required>
             <textarea id="upload-summary" placeholder="핵심 한 줄 요약" rows="3" required></textarea>
             <input type="text" id="upload-tags" placeholder="해시태그 (쉼표로 구분, 예: #브랜딩, #바이럴)" required>
             <input type="url" id="upload-link" placeholder="원본 링크 (https://...)" required>
-            
-            <label for="upload-image">대표 이미지 선택</label>
-            <input type="file" id="upload-image" accept="image/*" required>
 
             <button type="submit" id="submit-btn">수정 완료</button>
         </form>
@@ -35,7 +29,6 @@
         <p>&copy; 2025 A!Ref. All Rights Reserved.</p>
     </footer>
 
-    <script type="module" src="config.js"></script>
     <script type="module" src="edit.js"></script>
     <script type="module" src="auth-status.js"></script>
 </body>
