@@ -444,3 +444,14 @@ footer {
     background-color: #cc0000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
+
+
+label[for="upload-link"]::after,
+label[for="upload-title"]::after,
+label[for="upload-category"]::after,
+label[for="upload-summary"]::after {
+    content: " *";
+    color: red;
+    font-weight: bold;
+}
+
