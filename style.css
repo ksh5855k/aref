@@ -256,9 +256,9 @@ h1 {
 }
 
 .show-password-label {
-    width: 100%;
+    /*width: 100%;*/
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
     gap: 5px;
     margin-bottom: 15px;
@@ -413,3 +413,34 @@ footer {
     background-color: #e0e0e0;
 }
 
+
+.ref-meta {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 30px;
+}
+
+
+.edit-button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.delete-post-btn {
+    padding: 8px 15px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.delete-post-btn:hover {
+    background-color: #cc0000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
