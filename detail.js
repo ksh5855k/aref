@@ -1,137 +1,174 @@
-// detail.js (최종본 - 조회수 및 삭제 기능 통합)
+// detail.js (최종 수정: 저장 기능 + 이모지 변경 + 조회수 + 삭제)
 
 import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where, updateDoc, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, deleteDoc, updateDoc, increment, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-// Firebase 앱 및 서비스 초기화
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 전역 변수로 사용자 ID를 저장
-let currentUserId = null; 
-
-// HTML 문서 로딩이 끝났을 때 실행될 코드
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. URL에서 레퍼런스의 id를 가져옵니다.
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = parseInt(urlParams.get('id'));
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get('id'); // URL에서 id 가져오기 (문자열 형태)
 
-    // 2. 로그인 상태 감지
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            alert("자료를 보려면 로그인이 필요합니다.");
-            window.location.href = "login.html";
-            return;
-        }
-        currentUserId = user.uid; // 사용자 ID 저장
+    if (!docId) {
+        alert("잘못된 접근입니다.");
+        window.location.href = "index.html";
+        return;
+    }
 
-        // 3. ID 유효성 검사
-        if (isNaN(id)) {
-            document.querySelector('.detail-content').innerHTML = `<p class="error-message">유효하지 않은 임무 자료 ID입니다.</p>`;
-            return;
-        }
-
-        await fetchAndRenderReference(id); // 메인 렌더링 함수 호출
-        attachDeleteListener(); // 삭제 이벤트 리스너 추가
-    });
-});
-
-
-// 상세 페이지 데이터를 가져와 화면에 그리는 메인 함수
-async function fetchAndRenderReference(id) {
-    const detailContent = document.querySelector('.detail-content');
-    if (!detailContent) return;
+    // 1. 조회수 증가 (새로고침 때마다 올라가는 방식)
+    // 실제 서비스에선 쿠키나 세션으로 중복 방지하지만, 지금은 단순하게 갑니다.
+    // 주의: id는 숫자형으로 저장했으므로 쿼리로 문서를 찾아야 합니다.
+    let firestoreDocId = null; // 실제 문서 ID (난수)
+    let currentRefData = null; // 현재 보고 있는 데이터
 
     try {
-        const q = query(collection(db, "references"), where("id", "==", id));
+        const q = query(collection(db, "references"), where("id", "==", Number(docId)));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            detailContent.innerHTML = `<p class="error-message">임무 자료를 찾을 수 없습니다.</p>`;
+            alert("삭제되거나 존재하지 않는 자료입니다.");
+            window.location.href = "index.html";
             return;
         }
 
-        const docSnapshot = querySnapshot.docs[0];
-        const refData = docSnapshot.data();
-        const docRef = docSnapshot.ref; 
-        
-        // 조회수 증가 및 계산
-        await updateDoc(docRef, { views: increment(1) });
-        const currentViews = refData.views || 0;
-        const newViews = currentViews + 1;
-        
-        // 4. 모든 데이터를 동적으로 생성하여 화면에 그립니다.
-        const contentHTML = `
-            <h2>${refData.title || '제목 없음'}</h2>
+        querySnapshot.forEach(async (document) => {
+            firestoreDocId = document.id; // 나중에 삭제/수정할 때 필요
+            currentRefData = document.data();
             
-            <p class="ref-meta">
-                <span>작성자: <span id="ref-author">${refData.author || '익명 에이전트'}</span></span>
-                | <span>조회수: <span id="ref-views">${newViews}</span></span>
-            </p>
+            // 조회수 +1 업데이트
+            await updateDoc(document.ref, {
+                views: increment(1)
+            });
 
-            <div class="edit-button-container">
-                <a href="edit.html?id=${id}" class="edit-link">수정하기 ✏️</a>
-                <button id="delete-post-btn" class="delete-post-btn" data-doc-id="${docSnapshot.id}">자료 삭제 🗑️</button>
-            </div>
+            // 화면에 데이터 뿌리기
+            renderDetail(currentRefData);
+        });
 
-            <img src="${refData.image}" alt="${refData.title} 이미지">
-            
-            <h3>[캠페인 요약]</h3>
-            <p>${refData.detailSummary || '요약 정보 없음'}</p>
-            
-            <h3>[Why it works]</h3>
-            <p>${refData.detailWhy || '분석 정보 없음'}</p>
-
-            <h3>[How to apply]</h3>
-            <p>${refData.detailHow || '적용 방안 없음'}</p>
-
-            <div class="button-wrapper">
-                <a href="${refData.externalLink}" target="_blank" class="external-link">자세한 내용 확인하기</a>
-                <a href="index.html" class="back-to-list">목록으로 돌아가기</a>
-            </div>
-        `;
-        detailContent.innerHTML = contentHTML;
-        document.title = `${refData.title} - A!Ref`;
-        
     } catch (error) {
-        console.error("임무 자료를 불러오는 중 오류 발생:", error);
-        document.querySelector('.detail-content').innerHTML = `<p class="error-message">자료 처리 중 오류가 발생했습니다. (콘솔 확인 필요)</p>`;
+        console.error("상세 정보 로딩 실패:", error);
+    }
+
+    // 2. 로그인 상태 및 저장 버튼 처리
+    const saveBtn = document.getElementById('detail-save-btn');
+    const deleteBtn = document.getElementById('delete-btn');
+
+    onAuthStateChanged(auth, async (user) => {
+        // A. 삭제 버튼 권한 (관리자만? 혹은 누구나? 일단 로그인하면 보이게)
+        if (user) {
+            deleteBtn.style.display = 'block';
+            
+            // B. 저장 상태 확인 (내가 찜했는지?)
+            checkIfSaved(user, Number(docId), saveBtn);
+
+            // C. 저장 버튼 클릭 이벤트
+            saveBtn.onclick = () => toggleSave(user, Number(docId), saveBtn);
+
+            // D. 삭제 버튼 클릭 이벤트
+            deleteBtn.onclick = () => deleteReference(firestoreDocId);
+
+        } else {
+            deleteBtn.style.display = 'none';
+            // 비로그인 상태에서 저장 버튼 누르면
+            saveBtn.onclick = () => {
+                if(confirm("로그인이 필요한 기능입니다. 로그인하시겠습니까?")) {
+                    window.location.href = "login.html";
+                }
+            };
+        }
+    });
+});
+
+function renderDetail(data) {
+    document.getElementById('detail-category').textContent = data.category;
+    document.getElementById('detail-title').textContent = data.title;
+    document.getElementById('detail-image').src = data.image;
+    document.getElementById('detail-summary').textContent = data.summary;
+    
+    // 태그
+    const tagContainer = document.getElementById('detail-tags');
+    tagContainer.innerHTML = '';
+    (data.tags || []).forEach(tag => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = tag;
+        tagContainer.appendChild(span);
+    });
+
+    // 상세 내용
+    document.getElementById('detail-why').textContent = data.detailWhy || "내용 없음";
+    document.getElementById('detail-how').textContent = data.detailHow || "내용 없음";
+
+    // 원본 링크 버튼
+    const linkBtn = document.getElementById('go-link-btn');
+    linkBtn.onclick = () => window.open(data.link, '_blank');
+}
+
+// 저장 상태 확인 함수
+async function checkIfSaved(user, refId, btnElement) {
+    try {
+        const q = query(
+            collection(db, "userSaves"), 
+            where("uid", "==", user.uid),
+            where("referenceId", "==", refId)
+        );
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            btnElement.textContent = '✅'; // 이미 저장됨
+        } else {
+            btnElement.textContent = '📂'; // 저장 안 됨
+        }
+    } catch (e) {
+        console.error("저장 확인 중 오류", e);
     }
 }
 
+// 저장/취소 토글 함수
+async function toggleSave(user, refId, btnElement) {
+    const isSaved = btnElement.textContent === '✅';
+    btnElement.textContent = isSaved ? '📂' : '✅'; // UI 즉시 반영
 
-// 삭제 버튼 이벤트 리스너 함수
-function attachDeleteListener() {
-    const deleteBtn = document.getElementById('delete-post-btn');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', async () => {
-            const docId = deleteBtn.dataset.docId; // 문서 고유 ID를 가져옵니다.
+    try {
+        if (isSaved) {
+            // 삭제 로직
+            const q = query(
+                collection(db, "userSaves"), 
+                where("uid", "==", user.uid),
+                where("referenceId", "==", refId)
+            );
+            const snapshot = await getDocs(q);
+            snapshot.forEach(async (doc) => {
+                await deleteDoc(doc.ref);
+            });
+        } else {
+            // 저장 로직
+            await addDoc(collection(db, "userSaves"), {
+                uid: user.uid,
+                referenceId: refId,
+                savedAt: new Date().toISOString()
+            });
+            alert("내 서랍에 추가했습니다! 📂");
+        }
+    } catch (error) {
+        console.error("저장 실패", error);
+        btnElement.textContent = isSaved ? '✅' : '📂'; // 원복
+        alert("오류가 발생했습니다.");
+    }
+}
 
-            const confirmDelete = confirm("[에이전트님], 이 임무 자료를 영구적으로 삭제하시겠어요? 이 작업은 되돌릴 수 없습니다.");
-            
-            if (confirmDelete) {
-                try {
-                    // 1. userSaves 컬렉션에서 해당 자료를 저장한 모든 기록을 삭제합니다. (보안상 중요한 단계)
-                    const savesQuery = query(collection(db, "userSaves"), where("referenceId", "==", docId));
-                    const savesSnapshot = await getDocs(savesQuery);
-                    
-                    const deletePromises = savesSnapshot.docs.map(doc => deleteDoc(doc.ref));
-                    await Promise.all(deletePromises); 
-
-                    // 2. references 컬렉션에서 해당 문서 자체를 삭제합니다.
-                    await deleteDoc(doc(db, "references", docId));
-
-                    alert("자료가 본부에서 영구 삭제되었습니다. 임무 완료! ✅");
-                    window.location.href = "index.html"; // 메인 페이지로 이동
-
-                } catch (error) {
-                    alert("자료 삭제 중 치명적인 오류가 발생했습니다.");
-                    console.error("Delete Error:", error);
-                }
-            }
-        });
+// 자료 삭제 함수
+async function deleteReference(firestoreDocId) {
+    if (confirm("정말로 이 자료를 삭제하시겠습니까? (복구 불가)")) {
+        try {
+            await deleteDoc(doc(db, "references", firestoreDocId));
+            alert("삭제되었습니다.");
+            window.location.href = "index.html";
+        } catch (error) {
+            console.error("삭제 실패:", error);
+            alert("삭제 중 오류가 발생했습니다.");
+        }
     }
 }

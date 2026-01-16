@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상세 정보 - A!Ref (아!레프)</title>
+    <title>상세 정보 - 애이렙(A!Ref)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,12 +14,51 @@
         <div id="auth-container"></div>
     </header>
 
-    <div class="detail-content">
-        <p class="loading-indicator">데이터를 불러오는 중입니다...</p>
-    </div>
+    <div class="detail-container">
+        
+        <div class="detail-header">
+            <span id="detail-category" class="category-badge">카테고리</span>
+            
+            <div class="title-row">
+                <h2 id="detail-title">제목을 불러오는 중...</h2>
+                <button id="detail-save-btn" class="save-btn-large" title="내 서랍에 보관">📂</button>
+            </div>
 
+            <p class="detail-date" id="detail-date">2026.01.16</p>
+        </div>
+
+        <div class="detail-body">
+            <img id="detail-image" src="" alt="참고 이미지">            
+            
+            <div class="detail-section">
+                <h3>📌 한 줄 요약</h3>
+                <p id="detail-summary" class="highlight-text">내용을 불러오는 중입니다...</p>
+            </div>
+
+            <div class="tag-container" id="detail-tags">
+                </div>
+
+            <div class="detail-section">
+                <h3>💡 Why it works</h3>
+                <p id="detail-why">분석 내용 로딩 중...</p>
+            </div>
+
+            <div class="detail-section">
+                <h3>🛠️ How to apply</h3>
+                <p id="detail-how">적용 방안 로딩 중...</p>
+            </div>
+            
+            <div class="action-area">
+                <button id="go-link-btn" class="link-btn">자세한 내용 확인하기 🔗</button>
+            </div>
+
+            <div class="admin-actions">
+                 <button id="delete-btn" class="delete-btn" style="display: none;">자료 삭제 🗑️</button>
+            </div>
+        </div>
+    </div>
     <footer>
-        <p>&copy; 2025 A!Ref. All Rights Reserved.</p>
+        <p>&copy; 2026 A!Ref. All Rights Reserved.</p>
     </footer>
 
     <script type="module" src="detail.js"></script>

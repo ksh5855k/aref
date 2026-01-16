@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>레퍼런스 올리기 - A!Ref (아!레프)</title>
+    <title>새로운 레퍼런스 공유하기 - A!Ref</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,21 +17,39 @@
     <div class="upload-container">
         <h2>새로운 레퍼런스 공유하기</h2>
         <form id="upload-form">
-            <input type="text" id="upload-category" placeholder="카테고리 (예: SNS 캠페인)" required>
-            <input type="text" id="upload-title" placeholder="레퍼런스 제목" required>
-            <textarea id="upload-summary" placeholder="핵심 한 줄 요약" rows="3" required></textarea>
-            <input type="text" id="upload-tags" placeholder="해시태그 (쉼표로 구분, 예: #브랜딩, #바이럴)" required>
-            <input type="url" id="upload-link" placeholder="원본 링크 (https://...)" required>
+            <label for="upload-category">카테고리</label>
+            <input type="text" id="upload-category" placeholder="예: TVC, 디지털 캠페인, 프로모션" required>
+
+            <label for="upload-title">제목</label>
+            <input type="text" id="upload-title" placeholder="레퍼런스 제목을 입력하세요" required>
+
+            <label for="upload-summary">한 줄 요약</label>
+            <textarea id="upload-summary" placeholder="카드의 메인 화면에 표시될 짧은 요약을 입력하세요" rows="2" required></textarea>
+
+            <label for="upload-tags">태그 (쉼표로 구분)</label>
+            <input type="text" id="upload-tags" placeholder="예: #영상미, #유머, #MZ세대">
 
             <label for="upload-image-url">이미지 주소(URL)</label>
-            <input type="url" id="upload-image-url" placeholder="이미지 주소(https://...)를 붙여넣으세요" required>
+            <input type="url" id="upload-image-url" placeholder="이미지 주소(https://...)를 붙여넣으세요">
+
+            <label for="upload-link">원본 링크</label>
+            <input type="url" id="upload-link" placeholder="원본 사이트 링크 (https://...)" required>
+
+            <label for="upload-detail-summary">캠페인 요약</label>
+            <textarea id="upload-detail-summary" placeholder="상세 페이지의 캠페인 요약을 입력하세요" rows="5"></textarea>
+
+            <label for="upload-detail-why">Why it works</label>
+            <textarea id="upload-detail-why" placeholder="이 레퍼런스가 왜 좋은지 분석 내용을 입력하세요" rows="5"></textarea>
+
+            <label for="upload-detail-how">How to apply</label>
+            <textarea id="upload-detail-how" placeholder="실제 기획에 어떻게 적용할 수 있을지 입력하세요" rows="5"></textarea>
 
             <button type="submit" id="submit-btn">공유하기</button>
         </form>
     </div>
 
     <footer>
-        <p>&copy; 2025 A!Ref. All Rights Reserved.</p>
+        <p>&copy; 2026 A!Ref. All Rights Reserved.</p>
     </footer>
 
     <script type="module" src="upload.js"></script>
