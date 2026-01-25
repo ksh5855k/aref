@@ -7,9 +7,18 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// ★ 유튜브 ID 추출 헬퍼 함수
+function getYouTubeId(url) {
+    if (!url) return null;
+    // 다양한 유튜브 URL 패턴 대응 (youtu.be, watch?v= 등)
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
-    const docId = Number(params.get('id')); // ID는 숫자형
+    const docId = Number(params.get('id'));
 
     if (!docId) {
         alert("잘못된 접근입니다.");
@@ -17,10 +26,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 1. 내비게이션 설정 (이전/다음/목록)
+    // 1. 내비게이션 설정
     setupNavigation(docId);
 
-    // 2. 데이터 불러오기 & 조회수 증가
+    // 2. 데이터 로드
     let firestoreDocId = null; 
 
     try {
@@ -37,9 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             firestoreDocId = document.id;
             const data = document.data();
             
-            // 조회수 +1
+            // 조회수 증가
             await updateDoc(document.ref, { views: increment(1) });
 
+            // 화면 그리기
             renderDetail(data);
         });
 
@@ -47,15 +57,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("상세 정보 로딩 실패:", error);
     }
 
-    // 3. 버튼 이벤트 (저장, 삭제)
+    // 3. 버튼 이벤트 설정
     const saveBtn = document.getElementById('detail-save-btn');
     const deleteBtn = document.getElementById('delete-btn');
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            deleteBtn.style.display = 'flex'; // 스타일 flex로 변경 (가로 정렬 위해)
-            
-            // 저장 상태 확인
+            deleteBtn.style.display = 'flex';
             checkIfSaved(user, docId, saveBtn);
 
             saveBtn.onclick = () => toggleSave(user, docId, saveBtn);
@@ -69,63 +77,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// 내비게이션(이전/다음) 설정 함수
-function setupNavigation(currentId) {
-    const backBtn = document.getElementById('back-to-list-btn');
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-
-    // ★ 목록으로 돌아가기
-    // history.back() 대신 index.html로 직접 이동하여 script.js가 세션을 읽도록 유도
-    if(backBtn) {
-        backBtn.onclick = () => {
-            window.location.href = "index.html";
-        };
-    }
-
-    // 세션에서 현재 검색 결과 목록 가져오기
-    const searchResults = JSON.parse(sessionStorage.getItem('currentResults') || '[]');
-    const currentIndex = searchResults.indexOf(currentId);
-
-    // 검색 결과 내 이동 로직
-    if (searchResults.length > 0 && currentIndex !== -1) {
-        // 이전 버튼
-        if (currentIndex > 0) {
-            prevBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex - 1]}`;
-            prevBtn.disabled = false;
-        } else {
-            prevBtn.disabled = true; // 첫 번째 글이면 비활성화
-        }
-
-        // 다음 버튼
-        if (currentIndex < searchResults.length - 1) {
-            nextBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex + 1]}`;
-            nextBtn.disabled = false;
-        } else {
-            nextBtn.disabled = true; // 마지막 글이면 비활성화
-        }
-    } else {
-        // 목록 정보가 없으면 화살표 숨김
-        prevBtn.style.visibility = 'hidden';
-        nextBtn.style.visibility = 'hidden';
-    }
-}
-
 function renderDetail(data) {
     document.getElementById('detail-category').textContent = data.category;
     document.getElementById('detail-title').textContent = data.title;
+    document.getElementById('detail-summary').textContent = data.summary;
+    document.getElementById('detail-why').textContent = data.detailWhy || "내용 없음";
+    document.getElementById('detail-how').textContent = data.detailHow || "내용 없음";
     
-    // 이미지 처리
+    // ★ 영상 및 이미지 처리 로직
+    const videoContainer = document.getElementById('video-container');
     const imgEl = document.getElementById('detail-image');
-    if(data.image) {
-        imgEl.src = data.image;
-        imgEl.style.display = 'block';
-    } else {
+    
+    // 1. 유튜브 링크가 있는지 확인
+    const videoId = getYouTubeId(data.video);
+
+    if (videoId) {
+        // 영상이 있으면 영상 컨테이너 표시 & iframe 생성
+        videoContainer.style.display = 'block';
+        videoContainer.innerHTML = `
+            <iframe 
+                width="100%" 
+                height="100%" 
+                src="https://www.youtube.com/embed/${videoId}" 
+                title="YouTube video player" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        `;
+        // 이미지는 숨기거나 작게 표시 (여기서는 숨김 처리)
         imgEl.style.display = 'none';
+    } else {
+        // 영상이 없으면 영상 컨테이너 숨김 & 이미지 표시
+        videoContainer.style.display = 'none';
+        videoContainer.innerHTML = '';
+        
+        if(data.image) {
+            imgEl.src = data.image;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
     }
 
-    document.getElementById('detail-summary').textContent = data.summary;
-    
+    // 태그
     const tagContainer = document.getElementById('detail-tags');
     tagContainer.innerHTML = '';
     (data.tags || []).forEach(tag => {
@@ -135,11 +130,44 @@ function renderDetail(data) {
         tagContainer.appendChild(span);
     });
 
-    document.getElementById('detail-why').textContent = data.detailWhy || "내용 없음";
-    document.getElementById('detail-how').textContent = data.detailHow || "내용 없음";
-
+    // 원본 링크
     const linkBtn = document.getElementById('go-link-btn');
     linkBtn.onclick = () => window.open(data.link, '_blank');
+}
+
+// 내비게이션 설정
+function setupNavigation(currentId) {
+    const backBtn = document.getElementById('back-to-list-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    if(backBtn) {
+        backBtn.onclick = () => {
+            window.location.href = "index.html";
+        };
+    }
+
+    const searchResults = JSON.parse(sessionStorage.getItem('currentResults') || '[]');
+    const currentIndex = searchResults.indexOf(currentId);
+
+    if (searchResults.length > 0 && currentIndex !== -1) {
+        if (currentIndex > 0) {
+            prevBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex - 1]}`;
+            prevBtn.disabled = false;
+        } else {
+            prevBtn.disabled = true;
+        }
+
+        if (currentIndex < searchResults.length - 1) {
+            nextBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex + 1]}`;
+            nextBtn.disabled = false;
+        } else {
+            nextBtn.disabled = true;
+        }
+    } else {
+        prevBtn.style.visibility = 'hidden';
+        nextBtn.style.visibility = 'hidden';
+    }
 }
 
 async function checkIfSaved(user, refId, btnElement) {

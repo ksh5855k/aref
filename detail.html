@@ -7,9 +7,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
+    <header class="sticky-header">
         <div class="header-left">
             <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="키워드, 태그, 본문 내용 검색..." autocomplete="off">
+                <span class="search-icon">🔍</span>
+            </div>
         </div>
         <div id="auth-container"></div>
     </header>
@@ -28,6 +32,10 @@
         </div>
 
         <div class="detail-body">
+            
+            <div id="video-container" class="video-wrapper" style="display: none;">
+                </div>
+
             <img id="detail-image" src="" alt="참고 이미지">            
 
             <div class="detail-section">
@@ -60,10 +68,6 @@
                     
                     <button id="next-btn" class="nav-btn" title="다음 레퍼런스">→</button>
                 </div>
-            </div>
-
-            <div class="admin-actions">
-                 <button id="delete-btn" class="delete-btn" style="display: none;">자료 삭제 🗑️</button>
             </div>
         </div>
     </div>
