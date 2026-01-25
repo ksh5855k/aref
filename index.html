@@ -7,12 +7,27 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="header-left">
-            <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
+    <header class="sticky-header">
+    <div class="header-left">
+        <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="키워드, 태그, 본문 내용 검색..." autocomplete="off">
+            <span class="search-icon">🔍</span>
         </div>
-        <div id="auth-container"></div>
-    </header>
+    </div>
+    <div id="auth-container"></div>
+</header>
+
+<div class="filter-sort-container">
+    <div class="sort-group">
+        <select id="sort-select">
+            <option value="id-desc">최신순</option>
+            <option value="id-asc">오래된 순</option>
+            <option value="views-desc">조회수 높은 순</option>
+            <option value="saves-desc">저장 많은 순</option>
+        </select>
+    </div>
+</div>
 
     <div class="card-wrapper">
         <p class="loading-indicator">임무 자료를 불러오는 중입니다...</p>

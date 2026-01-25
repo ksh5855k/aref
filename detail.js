@@ -1,8 +1,6 @@
-// detail.js (최종 수정: 저장 기능 + 이모지 변경 + 조회수 + 삭제)
-
 import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, doc, getDoc, deleteDoc, updateDoc, increment, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getFirestore, doc, deleteDoc, updateDoc, increment, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
@@ -11,7 +9,7 @@ const auth = getAuth(app);
 
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
-    const docId = params.get('id'); // URL에서 id 가져오기 (문자열 형태)
+    const docId = Number(params.get('id')); // ID는 숫자형
 
     if (!docId) {
         alert("잘못된 접근입니다.");
@@ -19,14 +17,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 1. 조회수 증가 (새로고침 때마다 올라가는 방식)
-    // 실제 서비스에선 쿠키나 세션으로 중복 방지하지만, 지금은 단순하게 갑니다.
-    // 주의: id는 숫자형으로 저장했으므로 쿼리로 문서를 찾아야 합니다.
-    let firestoreDocId = null; // 실제 문서 ID (난수)
-    let currentRefData = null; // 현재 보고 있는 데이터
+    // 1. 내비게이션 설정 (이전/다음/목록)
+    setupNavigation(docId);
+
+    // 2. 데이터 불러오기 & 조회수 증가
+    let firestoreDocId = null; 
 
     try {
-        const q = query(collection(db, "references"), where("id", "==", Number(docId)));
+        const q = query(collection(db, "references"), where("id", "==", docId));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
@@ -36,59 +34,98 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         querySnapshot.forEach(async (document) => {
-            firestoreDocId = document.id; // 나중에 삭제/수정할 때 필요
-            currentRefData = document.data();
+            firestoreDocId = document.id;
+            const data = document.data();
             
-            // 조회수 +1 업데이트
-            await updateDoc(document.ref, {
-                views: increment(1)
-            });
+            // 조회수 +1
+            await updateDoc(document.ref, { views: increment(1) });
 
-            // 화면에 데이터 뿌리기
-            renderDetail(currentRefData);
+            renderDetail(data);
         });
 
     } catch (error) {
         console.error("상세 정보 로딩 실패:", error);
     }
 
-    // 2. 로그인 상태 및 저장 버튼 처리
+    // 3. 버튼 이벤트 (저장, 삭제)
     const saveBtn = document.getElementById('detail-save-btn');
     const deleteBtn = document.getElementById('delete-btn');
 
     onAuthStateChanged(auth, async (user) => {
-        // A. 삭제 버튼 권한 (관리자만? 혹은 누구나? 일단 로그인하면 보이게)
         if (user) {
-            deleteBtn.style.display = 'block';
+            deleteBtn.style.display = 'flex'; // 스타일 flex로 변경 (가로 정렬 위해)
             
-            // B. 저장 상태 확인 (내가 찜했는지?)
-            checkIfSaved(user, Number(docId), saveBtn);
+            // 저장 상태 확인
+            checkIfSaved(user, docId, saveBtn);
 
-            // C. 저장 버튼 클릭 이벤트
-            saveBtn.onclick = () => toggleSave(user, Number(docId), saveBtn);
-
-            // D. 삭제 버튼 클릭 이벤트
+            saveBtn.onclick = () => toggleSave(user, docId, saveBtn);
             deleteBtn.onclick = () => deleteReference(firestoreDocId);
-
         } else {
             deleteBtn.style.display = 'none';
-            // 비로그인 상태에서 저장 버튼 누르면
             saveBtn.onclick = () => {
-                if(confirm("로그인이 필요한 기능입니다. 로그인하시겠습니까?")) {
-                    window.location.href = "login.html";
-                }
+                if(confirm("로그인이 필요한 기능입니다.")) window.location.href = "login.html";
             };
         }
     });
 });
 
+// 내비게이션(이전/다음) 설정 함수
+function setupNavigation(currentId) {
+    const backBtn = document.getElementById('back-to-list-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    // ★ 목록으로 돌아가기
+    // history.back() 대신 index.html로 직접 이동하여 script.js가 세션을 읽도록 유도
+    if(backBtn) {
+        backBtn.onclick = () => {
+            window.location.href = "index.html";
+        };
+    }
+
+    // 세션에서 현재 검색 결과 목록 가져오기
+    const searchResults = JSON.parse(sessionStorage.getItem('currentResults') || '[]');
+    const currentIndex = searchResults.indexOf(currentId);
+
+    // 검색 결과 내 이동 로직
+    if (searchResults.length > 0 && currentIndex !== -1) {
+        // 이전 버튼
+        if (currentIndex > 0) {
+            prevBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex - 1]}`;
+            prevBtn.disabled = false;
+        } else {
+            prevBtn.disabled = true; // 첫 번째 글이면 비활성화
+        }
+
+        // 다음 버튼
+        if (currentIndex < searchResults.length - 1) {
+            nextBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex + 1]}`;
+            nextBtn.disabled = false;
+        } else {
+            nextBtn.disabled = true; // 마지막 글이면 비활성화
+        }
+    } else {
+        // 목록 정보가 없으면 화살표 숨김
+        prevBtn.style.visibility = 'hidden';
+        nextBtn.style.visibility = 'hidden';
+    }
+}
+
 function renderDetail(data) {
     document.getElementById('detail-category').textContent = data.category;
     document.getElementById('detail-title').textContent = data.title;
-    document.getElementById('detail-image').src = data.image;
+    
+    // 이미지 처리
+    const imgEl = document.getElementById('detail-image');
+    if(data.image) {
+        imgEl.src = data.image;
+        imgEl.style.display = 'block';
+    } else {
+        imgEl.style.display = 'none';
+    }
+
     document.getElementById('detail-summary').textContent = data.summary;
     
-    // 태그
     const tagContainer = document.getElementById('detail-tags');
     tagContainer.innerHTML = '';
     (data.tags || []).forEach(tag => {
@@ -98,68 +135,46 @@ function renderDetail(data) {
         tagContainer.appendChild(span);
     });
 
-    // 상세 내용
     document.getElementById('detail-why').textContent = data.detailWhy || "내용 없음";
     document.getElementById('detail-how').textContent = data.detailHow || "내용 없음";
 
-    // 원본 링크 버튼
     const linkBtn = document.getElementById('go-link-btn');
     linkBtn.onclick = () => window.open(data.link, '_blank');
 }
 
-// 저장 상태 확인 함수
 async function checkIfSaved(user, refId, btnElement) {
     try {
-        const q = query(
-            collection(db, "userSaves"), 
-            where("uid", "==", user.uid),
-            where("referenceId", "==", refId)
-        );
+        const q = query(collection(db, "userSaves"), where("uid", "==", user.uid), where("referenceId", "==", refId));
         const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            btnElement.textContent = '✅'; // 이미 저장됨
-        } else {
-            btnElement.textContent = '📂'; // 저장 안 됨
-        }
-    } catch (e) {
-        console.error("저장 확인 중 오류", e);
-    }
+        if (!snapshot.empty) btnElement.textContent = '✅';
+        else btnElement.textContent = '📂';
+    } catch (e) { console.error(e); }
 }
 
-// 저장/취소 토글 함수
 async function toggleSave(user, refId, btnElement) {
     const isSaved = btnElement.textContent === '✅';
-    btnElement.textContent = isSaved ? '📂' : '✅'; // UI 즉시 반영
+    btnElement.textContent = isSaved ? '📂' : '✅'; 
 
     try {
         if (isSaved) {
-            // 삭제 로직
-            const q = query(
-                collection(db, "userSaves"), 
-                where("uid", "==", user.uid),
-                where("referenceId", "==", refId)
-            );
+            const q = query(collection(db, "userSaves"), where("uid", "==", user.uid), where("referenceId", "==", refId));
             const snapshot = await getDocs(q);
-            snapshot.forEach(async (doc) => {
-                await deleteDoc(doc.ref);
-            });
+            snapshot.forEach(async (doc) => await deleteDoc(doc.ref));
         } else {
-            // 저장 로직
             await addDoc(collection(db, "userSaves"), {
                 uid: user.uid,
                 referenceId: refId,
                 savedAt: new Date().toISOString()
             });
-            alert("내 서랍에 추가했습니다! 📂");
+            alert("내 서랍에 보관했습니다! 📂");
         }
     } catch (error) {
-        console.error("저장 실패", error);
-        btnElement.textContent = isSaved ? '✅' : '📂'; // 원복
+        console.error(error);
+        btnElement.textContent = isSaved ? '✅' : '📂';
         alert("오류가 발생했습니다.");
     }
 }
 
-// 자료 삭제 함수
 async function deleteReference(firestoreDocId) {
     if (confirm("정말로 이 자료를 삭제하시겠습니까? (복구 불가)")) {
         try {
