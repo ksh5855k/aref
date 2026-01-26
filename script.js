@@ -154,18 +154,24 @@ function filterAndRender(keyword) {
     });
 }
 
+// script.js 의 createReferenceCard 함수 교체
+
 function createReferenceCard(data, isSaved) {
     const div = document.createElement('div');
     div.className = 'reference-card';
     const views = data.views || 0;
     const saveIcon = isSaved ? '✅' : '📂'; 
 
+    // ★ 수정된 부분: onerror에 'this.onerror=null' 추가 및 사이트 변경
+    const fallbackImage = "https://placehold.co/300x200?text=No+Image";
+
     div.innerHTML = `
         <div class="save-button-container">
            <button class="save-btn" onclick="toggleSave(${data.id}, this)">${saveIcon}</button>
         </div>
         <a href="detail.html?id=${data.id}" class="card-link-area">
-            <img src="${data.image}" alt="${data.title}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            <img src="${data.image}" alt="${data.title}" 
+                 onerror="this.onerror=null; this.src='${fallbackImage}';">
             <div class="card-content">
                 <span class="category-badge">${data.category}</span>
                 <h2>${data.title}</h2>

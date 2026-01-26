@@ -7,17 +7,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-        <header class="sticky-header">
-            <div class="header-left">
-                <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
-                <div class="search-container">
-                    <input type="text" id="search-input" placeholder="키워드, 태그, 본문 내용 검색..." autocomplete="off">
-                    <span class="search-icon">🔍</span>
-                </div>
+    <header class="sticky-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="키워드, 태그, 본문 내용 검색..." autocomplete="off">
+                <span class="search-icon">🔍</span>
             </div>
-            <div id="auth-container">
-                </div>
-        </header>
+        </div>
+        <div id="auth-container">
+        </div>
+    </header>
 
     <div class="upload-container">
         <h2>새로운 레퍼런스 공유하기</h2>
@@ -34,12 +34,16 @@
             <label for="upload-tags">태그 (쉼표로 구분)</label>
             <input type="text" id="upload-tags" placeholder="예: #영상미, #유머, #MZ세대">
 
-            <label for="upload-image-url">이미지 주소(URL)</label>
-            <input type="url" id="upload-image-url" placeholder="이미지 주소(https://...)를 붙여넣으세요">
-                <div class="form-group">
-                    <label for="upload-video">유튜브 영상 링크 (선택사항)</label>
-                    <input type="text" id="upload-video" placeholder="예: https://youtu.be/..." autocomplete="off">
-                </div>
+            <label for="upload-image-url">이미지 주소(URL) <span style="color: red;">*</span></label>
+            <input type="url" id="upload-image-url" placeholder="이미지 주소(https://...)를 붙여넣으세요" required>
+            <p style="font-size: 0.85em; color: #888; margin-top: -5px; margin-bottom: 15px;">
+                💡 번거롭게 다운로드하지 마세요. 이미지 우클릭 → <b>[이미지 주소 복사]</b>로 1초 만에 끝!
+            </p>
+
+            <div class="form-group">
+                <label for="upload-video">유튜브 영상 링크 (선택사항)</label>
+                <input type="text" id="upload-video" placeholder="예: https://youtu.be/..." autocomplete="off">
+            </div>
 
             <label for="upload-link">원본 링크</label>
             <input type="url" id="upload-link" placeholder="원본 사이트 링크 (https://...)" required>
