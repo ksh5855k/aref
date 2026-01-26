@@ -1,6 +1,6 @@
 import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy, addDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, deleteDoc, where, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
@@ -8,53 +8,65 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // 전역 변수
-let allData = [];           // 모든 레퍼런스 데이터 (저장 수 계산 포함)
-let mySavedIds = new Set(); // 내가 저장한 글 ID 목록
-let currentSort = 'id-desc'; // 기본 정렬
+let allData = [];
+let mySavedIds = new Set();
+let currentSort = 'id-desc';
+
+// ★ 태그 클릭 시 실행될 전역 함수 (window에 등록)
+window.searchByTag = function(tag) {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.value = tag; // 검색창에 태그 입력
+        searchInput.dispatchEvent(new Event('input')); // 검색 이벤트 강제 실행
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // 맨 위로 스크롤
+    }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 초기 데이터 로드
     refreshContent();
 
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
 
-    // 2. 세션에 저장된 검색어가 있다면 복구 (목록으로 돌아왔을 때)
-    const savedKeyword = sessionStorage.getItem('searchKeyword');
-    if (savedKeyword && searchInput) {
-        searchInput.value = savedKeyword;
+    // ★ URL 파라미터 확인 (상세페이지에서 태그 누르고 왔을 때)
+    const params = new URLSearchParams(window.location.search);
+    const urlSearchParam = params.get('search');
+
+    if (urlSearchParam && searchInput) {
+        // 1. URL 검색어가 있으면 바로 검색 실행
+        searchInput.value = urlSearchParam;
+        sessionStorage.setItem('searchKeyword', urlSearchParam);
+    } else {
+        // 2. 없으면 세션에 저장된 검색어 복구 (뒤로가기 시)
+        const savedKeyword = sessionStorage.getItem('searchKeyword');
+        if (savedKeyword && searchInput) {
+            searchInput.value = savedKeyword;
+        }
     }
 
-    // 3. 실시간 검색 이벤트
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             const keyword = searchInput.value.trim().toLowerCase();
-            // 검색어 세션에 저장
             sessionStorage.setItem('searchKeyword', keyword);
             filterAndRender(keyword);
         });
     }
 
-    // 4. 정렬 변경 이벤트
     if (sortSelect) {
         sortSelect.addEventListener('change', (e) => {
             currentSort = e.target.value;
-            sortAllData(); // 정렬 다시 하기
-            
-            // 검색어가 있으면 그 상태 유지하면서 재정렬
+            sortAllData();
             const keyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
             filterAndRender(keyword);
         });
     }
 });
 
-// 데이터 로드 및 저장 수 계산 함수
 async function refreshContent() {
     const cardWrapper = document.querySelector('.card-wrapper');
     cardWrapper.innerHTML = '<p class="loading-indicator">데이터를 불러오는 중...</p>';
 
     onAuthStateChanged(auth, async (user) => {
-        // A. 찜 목록 로드 (나의 저장 상태 확인용)
         if (user) {
             try {
                 const saveQ = query(collection(db, "userSaves"), where("uid", "==", user.uid));
@@ -67,18 +79,15 @@ async function refreshContent() {
         }
 
         try {
-            // B. 레퍼런스 데이터 & 전체 저장 횟수 로드
             const refSnapshot = await getDocs(collection(db, "references"));
             const allSavesSnapshot = await getDocs(collection(db, "userSaves"));
             
-            // 저장 횟수 카운팅 (Reference ID별로 집계)
             const saveCounts = {}; 
             allSavesSnapshot.forEach(doc => {
                 const rid = doc.data().referenceId;
                 saveCounts[rid] = (saveCounts[rid] || 0) + 1;
             });
 
-            // C. 데이터 합치기
             allData = [];
             refSnapshot.forEach(doc => {
                 const data = doc.data();
@@ -86,41 +95,34 @@ async function refreshContent() {
                 allData.push(data);
             });
 
-            // D. 정렬 및 렌더링
             sortAllData();
             
-            // 저장된 검색어가 있으면 그 검색어로, 없으면 전체 렌더링
+            // 데이터 로드 후 검색어 적용
             const searchInput = document.getElementById('search-input');
             const initialKeyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
             filterAndRender(initialKeyword);
 
         } catch (error) {
             console.error("로딩 실패:", error);
-            cardWrapper.innerHTML = '<p class="error-message">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+            cardWrapper.innerHTML = '<p class="empty-message">데이터를 불러오는 중 오류가 발생했습니다.</p>';
         }
     });
 }
 
-// 정렬 로직
 function sortAllData() {
     const [field, direction] = currentSort.split('-');
-
     allData.sort((a, b) => {
         let valA = a[field] || 0;
         let valB = b[field] || 0;
-
-        // 'saves' 정렬일 경우 saveCount 필드 사용
         if (field === 'saves') {
             valA = a.saveCount || 0;
             valB = b.saveCount || 0;
         }
-
         if (direction === 'desc') return valB - valA;
         else return valA - valB;
     });
 }
 
-// 필터링 & 화면 그리기 & 결과 세션 저장
 function filterAndRender(keyword) {
     const cardWrapper = document.querySelector('.card-wrapper');
     cardWrapper.innerHTML = '';
@@ -138,7 +140,6 @@ function filterAndRender(keyword) {
         return searchableText.includes(keyword);
     });
 
-    // ★ 핵심: 현재 보이는 순서(ID 목록)를 세션에 저장 (상세페이지 내비게이션용)
     const resultIds = filtered.map(item => item.id);
     sessionStorage.setItem('currentResults', JSON.stringify(resultIds));
 
@@ -154,16 +155,17 @@ function filterAndRender(keyword) {
     });
 }
 
-// script.js 의 createReferenceCard 함수 교체
-
 function createReferenceCard(data, isSaved) {
     const div = document.createElement('div');
     div.className = 'reference-card';
     const views = data.views || 0;
     const saveIcon = isSaved ? '✅' : '📂'; 
-
-    // ★ 수정된 부분: onerror에 'this.onerror=null' 추가 및 사이트 변경
     const fallbackImage = "https://placehold.co/300x200?text=No+Image";
+
+    // ★ 태그 클릭 시 event.preventDefault()로 카드 이동 막고 검색 실행!
+    const tagsHtml = (data.tags || []).map(tag => 
+        `<span class="tag" onclick="event.preventDefault(); window.searchByTag('${tag}')">${tag}</span>`
+    ).join('');
 
     div.innerHTML = `
         <div class="save-button-container">
@@ -180,7 +182,7 @@ function createReferenceCard(data, isSaved) {
                     <span class="view-count">👁️ ${views}</span>
                 </div>
                 <div class="tags-wrapper">
-                    ${(data.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    ${tagsHtml}
                 </div>
             </div>
         </a>
@@ -188,16 +190,12 @@ function createReferenceCard(data, isSaved) {
     return div;
 }
 
-// 저장/취소 기능
 window.toggleSave = async function(refId, btnElement) {
     const user = auth.currentUser;
     if (!user) {
-        if(confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-            window.location.href = "login.html";
-        }
+        if(confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) window.location.href = "login.html";
         return;
     }
-
     const isCurrentlySaved = btnElement.textContent === '✅';
     btnElement.textContent = isCurrentlySaved ? '📂' : '✅'; 
 
@@ -212,7 +210,8 @@ window.toggleSave = async function(refId, btnElement) {
                 referenceId: refId,
                 savedAt: new Date().toISOString()
             });
-            alert("내 서랍에 보관했습니다! 📂");
+            // showToast가 있다면 사용 가능 (여기선 alert 유지 혹은 통합 필요)
+            alert("내 서랍에 보관했습니다! 📂"); 
         }
     } catch (error) {
         console.error(error);

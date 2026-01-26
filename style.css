@@ -624,3 +624,22 @@ footer {
     opacity: 1;
     transform: translateY(0);
 }
+
+
+/* style.css 수정: 태그에 마우스 올리면 손가락 모양 나오게 */
+.tag {
+    display: inline-block;
+    background-color: #ffe7eb;
+    color: #FB3959;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    cursor: pointer; /* ★ 추가됨: 손가락 커서 */
+    transition: background 0.2s; /* ★ 추가됨: 부드러운 효과 */
+}
+
+.tag:hover {
+    background-color: #ffccd5; /* ★ 추가됨: 마우스 올리면 진해짐 */
+}

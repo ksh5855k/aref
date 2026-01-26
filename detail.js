@@ -2,16 +2,16 @@ import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, doc, deleteDoc, updateDoc, increment, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { showToast } from './toast.js'; // ★ 토스트 알림 추가
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ★ 유튜브 ID 추출 헬퍼 함수
 function getYouTubeId(url) {
     if (!url) return null;
-    // 다양한 유튜브 URL 패턴 대응 (youtu.be, watch?v= 등)
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    url = url.trim();
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
 }
@@ -26,10 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 1. 내비게이션 설정
     setupNavigation(docId);
-
-    // 2. 데이터 로드
     let firestoreDocId = null; 
 
     try {
@@ -45,11 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         querySnapshot.forEach(async (document) => {
             firestoreDocId = document.id;
             const data = document.data();
-            
-            // 조회수 증가
             await updateDoc(document.ref, { views: increment(1) });
-
-            // 화면 그리기
             renderDetail(data);
         });
 
@@ -57,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("상세 정보 로딩 실패:", error);
     }
 
-    // 3. 버튼 이벤트 설정
     const saveBtn = document.getElementById('detail-save-btn');
     const deleteBtn = document.getElementById('delete-btn');
 
@@ -84,15 +76,11 @@ function renderDetail(data) {
     document.getElementById('detail-why').textContent = data.detailWhy || "내용 없음";
     document.getElementById('detail-how').textContent = data.detailHow || "내용 없음";
     
-    // ★ 영상 및 이미지 처리 로직
     const videoContainer = document.getElementById('video-container');
     const imgEl = document.getElementById('detail-image');
-    
-    // 1. 유튜브 링크가 있는지 확인
     const videoId = getYouTubeId(data.video);
 
     if (videoId) {
-        // 영상이 있으면 영상 컨테이너 표시 & iframe 생성
         videoContainer.style.display = 'block';
         videoContainer.innerHTML = `
             <iframe 
@@ -105,47 +93,46 @@ function renderDetail(data) {
                 allowfullscreen>
             </iframe>
         `;
-        // 이미지는 숨기거나 작게 표시 (여기서는 숨김 처리)
         imgEl.style.display = 'none';
     } else {
-        // 영상이 없으면 영상 컨테이너 숨김 & 이미지 표시
         videoContainer.style.display = 'none';
         videoContainer.innerHTML = '';
-        
         if(data.image) {
             imgEl.src = data.image;
             imgEl.style.display = 'block';
+            imgEl.onerror = function() {
+                this.onerror = null;
+                this.src = "https://placehold.co/600x400?text=No+Image";
+            };
         } else {
             imgEl.style.display = 'none';
         }
     }
 
-    // 태그
+    // ★ 태그 렌더링 (클릭 시 메인 검색으로 이동)
     const tagContainer = document.getElementById('detail-tags');
     tagContainer.innerHTML = '';
     (data.tags || []).forEach(tag => {
         const span = document.createElement('span');
         span.className = 'tag';
         span.textContent = tag;
+        span.onclick = () => {
+            // 태그 클릭 시 검색어(쿼리 스트링)를 달고 메인으로 이동
+            window.location.href = `index.html?search=${encodeURIComponent(tag)}`;
+        };
         tagContainer.appendChild(span);
     });
 
-    // 원본 링크
     const linkBtn = document.getElementById('go-link-btn');
     linkBtn.onclick = () => window.open(data.link, '_blank');
 }
 
-// 내비게이션 설정
 function setupNavigation(currentId) {
     const backBtn = document.getElementById('back-to-list-btn');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
 
-    if(backBtn) {
-        backBtn.onclick = () => {
-            window.location.href = "index.html";
-        };
-    }
+    if(backBtn) backBtn.onclick = () => window.location.href = "index.html";
 
     const searchResults = JSON.parse(sessionStorage.getItem('currentResults') || '[]');
     const currentIndex = searchResults.indexOf(currentId);
@@ -194,12 +181,12 @@ async function toggleSave(user, refId, btnElement) {
                 referenceId: refId,
                 savedAt: new Date().toISOString()
             });
-            alert("내 서랍에 보관했습니다! 📂");
+            showToast("내 서랍에 보관했습니다! 📂"); // ★ 토스트 적용
         }
     } catch (error) {
         console.error(error);
         btnElement.textContent = isSaved ? '✅' : '📂';
-        alert("오류가 발생했습니다.");
+        showToast("오류가 발생했습니다.");
     }
 }
 
@@ -207,11 +194,11 @@ async function deleteReference(firestoreDocId) {
     if (confirm("정말로 이 자료를 삭제하시겠습니까? (복구 불가)")) {
         try {
             await deleteDoc(doc(db, "references", firestoreDocId));
-            alert("삭제되었습니다.");
-            window.location.href = "index.html";
+            showToast("삭제되었습니다.");
+            setTimeout(() => window.location.href = "index.html", 1000);
         } catch (error) {
             console.error("삭제 실패:", error);
-            alert("삭제 중 오류가 발생했습니다.");
+            showToast("삭제 중 오류가 발생했습니다.");
         }
     }
 }
