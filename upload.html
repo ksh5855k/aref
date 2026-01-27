@@ -22,8 +22,48 @@
     <div class="upload-container">
         <h2>새로운 레퍼런스 공유하기</h2>
         <form id="upload-form">
+            
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label for="upload-link" class="required-label" style="display: block; margin-bottom: 8px;">
+                    원본 링크 (URL) 
+                    <span style="font-weight: normal; font-size: 0.85rem; color: #666;">(먼저 입력하면 내용을 자동으로 채워드려요!)</span>
+                </label>
+                
+                <div style="display: flex; width: 100%; gap: 8px; align-items: center; box-sizing: border-box;">
+                    <input type="url" id="upload-link" placeholder="원본 사이트 링크 (https://...)" required 
+                           style="
+                               flex-grow: 1; 
+                               width: 0 !important; 
+                               min-width: 0; 
+                               height: 50px !important; 
+                               padding: 0 15px; 
+                               margin-bottom: 0; 
+                               box-sizing: border-box; 
+                               border: 1px solid #ddd; 
+                               border-radius: 8px;">
+                    
+                    <button type="button" id="fetch-btn" style="
+                        flex-shrink: 0;
+                        width: auto !important;
+                        height: 50px !important;
+                        padding: 0 20px;
+                        background: #333;
+                        color: #fff;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        white-space: nowrap;
+                        font-weight: bold;
+                        font-size: 0.95rem;
+                        margin-bottom: 0;
+                        box-sizing: border-box;
+                    ">불러오기 ⚡</button>
+                </div>
+                <p style="font-size: 0.85em; color: #888; margin-top: 8px;">* '불러오기'를 누르면 제목, 요약, 이미지를 자동으로 가져옵니다.</p>
+            </div>
+
             <div class="form-group">
-                <label for="category-select">카테고리 <span style="color: red;">*</span></label>
+                <label for="category-select" class="required-label">카테고리</label>
                 <select id="category-select" class="form-input" style="width: 100%; padding: 10px; margin-bottom: 10px;" required>
                     <option value="" disabled selected>카테고리를 선택해주세요</option>
                     <option value="디지털">디지털 (Digital)</option>
@@ -40,16 +80,16 @@
                 <p style="font-size: 0.85em; color: #888; margin-top: 5px;">* 메인 탭에 없는 분류라면 '기타'를 선택해 직접 입력해주세요.</p>
             </div>
 
-            <label for="upload-title">제목</label>
+            <label for="upload-title" class="required-label">제목</label>
             <input type="text" id="upload-title" placeholder="레퍼런스 제목을 입력하세요" required>
 
-            <label for="upload-summary">한 줄 요약</label>
+            <label for="upload-summary" class="required-label">한 줄 요약</label>
             <textarea id="upload-summary" placeholder="카드의 메인 화면에 표시될 짧은 요약을 입력하세요" rows="2" required></textarea>
 
             <label for="upload-tags">태그 (쉼표로 구분)</label>
             <input type="text" id="upload-tags" placeholder="예: #영상미, #유머, #MZ세대">
 
-            <label for="upload-image-url">이미지 주소(URL) <span style="color: red;">*</span></label>
+            <label for="upload-image-url" class="required-label">이미지 주소(URL)</label>
             <input type="url" id="upload-image-url" placeholder="이미지 주소(https://...)를 붙여넣으세요" required>
             <p style="font-size: 0.85em; color: #888; margin-top: -5px; margin-bottom: 15px;">
                 💡 번거롭게 다운로드하지 마세요. 이미지 우클릭 → <b>[이미지 주소 복사]</b>로 1초 만에 끝!
@@ -60,9 +100,6 @@
                 <input type="text" id="upload-video" placeholder="예: https://youtu.be/..." autocomplete="off">
             </div>
 
-            <label for="upload-link">원본 링크</label>
-            <input type="url" id="upload-link" placeholder="원본 사이트 링크 (https://...)" required>
-
             <label for="upload-detail-summary">캠페인 요약</label>
             <textarea id="upload-detail-summary" placeholder="상세 페이지의 캠페인 요약을 입력하세요" rows="5"></textarea>
 
@@ -72,7 +109,24 @@
             <label for="upload-detail-how">How to apply</label>
             <textarea id="upload-detail-how" placeholder="실제 기획에 어떻게 적용할 수 있을지 입력하세요" rows="5"></textarea>
 
-            <button type="submit" id="submit-btn">공유하기</button>
+            <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="button" id="cancel-btn" style="
+                    display: none; 
+                    flex: 1; 
+                    background: #f1f3f5; 
+                    color: #555; 
+                    border: none; 
+                    padding: 15px; 
+                    border-radius: 8px; 
+                    cursor: pointer; 
+                    font-weight: bold; 
+                    font-size: 1rem;">
+                    취소
+                </button>
+                
+                <button type="submit" id="submit-btn" style="flex: 2;">공유하기</button>
+            </div>
+
         </form>
     </div>
 

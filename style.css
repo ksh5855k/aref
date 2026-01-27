@@ -1133,3 +1133,15 @@ footer {
 }
 
 
+/* style.css 맨 아래에 추가하세요 */
+
+/* 필수 입력 라벨 옆에 붉은 별표 자동 생성 */
+.required-label::after {
+    content: "*";
+    color: red;
+    margin-left: 4px;
+    font-weight: bold;
+    font-size: 1.2rem; /* 별표 크기 키움 (제목 옆 별과 동일하게) */
+    vertical-align: middle;
+    line-height: 1;
+}

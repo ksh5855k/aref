@@ -1,17 +1,17 @@
 import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { showToast } from './toast.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// URL에서 수정할 글 ID 확인
 const params = new URLSearchParams(window.location.search);
 const editDocId = params.get('id') ? Number(params.get('id')) : null;
 let firestoreRef = null;
 
-// ★ [추가됨] 드롭다운 변경 시 입력창 토글 함수
 function setupCategoryToggle() {
     const select = document.getElementById('category-select');
     const customInput = document.getElementById('custom-category-input');
@@ -24,19 +24,42 @@ function setupCategoryToggle() {
         } else {
             customInput.style.display = 'none';
             customInput.required = false;
-            customInput.value = ''; // 다른 걸 선택하면 입력값 초기화
+            customInput.value = ''; 
         }
     });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    setupCategoryToggle(); // 토글 이벤트 연결
+    
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            alert("로그인이 필요합니다.");
+            window.location.href = "login.html";
+        }
+    });
 
-    // 만약 수정 모드라면 기존 데이터 불러오기
+    setupCategoryToggle(); 
+
+    const fetchBtn = document.getElementById('fetch-btn');
+    if (fetchBtn) {
+        fetchBtn.addEventListener('click', fetchMetaData);
+    }
+
+    // ★ 수정 모드일 때 처리
     if (editDocId) {
         document.querySelector('h2').textContent = "레퍼런스 수정하기";
         document.getElementById('submit-btn').textContent = "수정 완료";
         
+        // [추가됨] 취소 버튼 활성화
+        const cancelBtn = document.getElementById('cancel-btn');
+        if (cancelBtn) {
+            cancelBtn.style.display = 'block'; // 버튼 보이기
+            cancelBtn.onclick = () => {
+                // 상세 페이지로 돌아가기
+                window.location.href = `detail.html?id=${editDocId}`;
+            };
+        }
+
         try {
             const q = query(collection(db, "references"), where("id", "==", editDocId));
             const querySnapshot = await getDocs(q);
@@ -46,18 +69,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     firestoreRef = doc.ref;
                     const data = doc.data();
 
-                    // ★ [수정됨] 카테고리 데이터 복구 로직
                     const select = document.getElementById('category-select');
                     const customInput = document.getElementById('custom-category-input');
-                    
-                    // 저장된 카테고리가 드롭다운 옵션 중에 있는지 확인
                     const options = Array.from(select.options).map(opt => opt.value);
                     
                     if (options.includes(data.category)) {
-                        // 목록에 있으면 그대로 선택
                         select.value = data.category;
                     } else {
-                        // 목록에 없으면(직접 입력했던 것) 'custom' 선택 후 값 채우기
                         select.value = 'custom';
                         customInput.style.display = 'block';
                         customInput.value = data.category;
@@ -68,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.getElementById('upload-tags').value = (data.tags || []).join(', ');
                     document.getElementById('upload-image-url').value = data.image;
                     document.getElementById('upload-video').value = data.video || "";
-                    document.getElementById('upload-link').value = data.link;
+                    document.getElementById('upload-link').value = data.link; 
                     document.getElementById('upload-detail-summary').value = data.detailSummary || "";
                     document.getElementById('upload-detail-why').value = data.detailWhy || "";
                     document.getElementById('upload-detail-how').value = data.detailHow || "";
@@ -83,16 +101,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+async function fetchMetaData() {
+    const linkInput = document.getElementById('upload-link');
+    const titleInput = document.getElementById('upload-title');
+    const summaryInput = document.getElementById('upload-summary');
+    const imageInput = document.getElementById('upload-image-url');
+    const fetchBtn = document.getElementById('fetch-btn');
+
+    const url = linkInput.value.trim();
+    if (!url) {
+        showToast("URL을 입력해주세요!");
+        linkInput.focus();
+        return;
+    }
+
+    const originalBtnText = fetchBtn.textContent;
+    fetchBtn.textContent = "가져오는 중...⏳";
+    fetchBtn.disabled = true;
+    fetchBtn.style.opacity = "0.7";
+
+    try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+        
+        if (!data.contents) throw new Error("No data");
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, "text/html");
+
+        const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || doc.querySelector('title')?.textContent;
+        const ogImage = doc.querySelector('meta[property="og:image"]')?.content;
+        const ogDescription = doc.querySelector('meta[property="og:description"]')?.content || doc.querySelector('meta[name="description"]')?.content;
+
+        if (ogTitle && !titleInput.value) titleInput.value = ogTitle;
+        if (ogImage && !imageInput.value) imageInput.value = ogImage;
+        if (ogDescription && !summaryInput.value) summaryInput.value = ogDescription;
+
+        showToast("정보를 성공적으로 가져왔습니다! 🎉");
+
+    } catch (error) {
+        console.error("크롤링 실패:", error);
+        showToast("정보를 가져오지 못했습니다. 직접 입력해주세요. 🥲");
+    } finally {
+        fetchBtn.textContent = originalBtnText;
+        fetchBtn.disabled = false;
+        fetchBtn.style.opacity = "1";
+    }
+}
+
 document.getElementById('upload-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const submitBtn = document.querySelector('#upload-form button');
+    const submitBtn = document.getElementById('submit-btn');
     
-    // 값 가져오기
     const title = document.getElementById('upload-title').value.trim();
     const summary = document.getElementById('upload-summary').value.trim();
     
-    // ★ [수정됨] 카테고리 최종 값 결정 로직
     const select = document.getElementById('category-select');
     const customInput = document.getElementById('custom-category-input');
     let finalCategory = select.value;
@@ -101,7 +166,6 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
         finalCategory = customInput.value.trim();
     }
 
-    // 유효성 검사
     if (!finalCategory) {
         alert("카테고리를 입력해주세요.");
         return;
@@ -129,7 +193,7 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
             // [수정 모드]
             await updateDoc(firestoreRef, {
                 title: title,
-                category: finalCategory, // 결정된 카테고리 저장
+                category: finalCategory,
                 summary: summary,
                 detailSummary: detailSummary,
                 detailWhy: detailWhy,
@@ -147,11 +211,10 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
 
         } else {
             // [생성 모드]
-            // ★ 중요: ID를 미리 만들어서 변수에 저장합니다.
             const newId = Date.now(); 
 
             await addDoc(collection(db, "references"), {
-                id: newId, // 미리 만든 ID 사용
+                id: newId, 
                 title: title,
                 category: finalCategory,
                 summary: summary,
@@ -167,7 +230,6 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
             });
             showToast("🎉 성공적으로 공유되었습니다!");
             
-            // ★ 메인(index.html)이 아니라, 방금 만든 상세 페이지(newId)로 이동
             setTimeout(() => {
                 window.location.href = `detail.html?id=${newId}`;
             }, 1000);
