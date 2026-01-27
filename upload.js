@@ -4,6 +4,10 @@ import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { showToast } from './toast.js';
 
+// ★★★ 여기에 ImgBB API 키를 붙여넣으세요! ★★★
+const IMGBB_API_KEY = "0a10f7852c88538fd64853b78e9e3cad"; 
+// 예: "a1b2c3d4e5f6..." (따옴표 안에 넣으세요)
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -40,24 +44,74 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupCategoryToggle(); 
 
+    // 링크 크롤링 버튼
     const fetchBtn = document.getElementById('fetch-btn');
     if (fetchBtn) {
         fetchBtn.addEventListener('click', fetchMetaData);
     }
 
-    // ★ 수정 모드일 때 처리
+    // ★ [추가됨] 이미지 파일 업로드 로직
+    const imageFileInput = document.getElementById('image-file-input');
+    const uploadImageBtn = document.getElementById('upload-image-btn');
+    const imageUrlInput = document.getElementById('upload-image-url');
+
+    // 1. 버튼 누르면 숨겨진 파일창 열기
+    if (uploadImageBtn && imageFileInput) {
+        uploadImageBtn.addEventListener('click', () => {
+            imageFileInput.click();
+        });
+
+        // 2. 파일을 선택하면 ImgBB로 업로드 시작
+        imageFileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 로딩 표시
+            const originalText = uploadImageBtn.textContent;
+            uploadImageBtn.textContent = "업로드 중...⏳";
+            uploadImageBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append("image", file);
+
+                // ImgBB API 호출
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 성공 시 URL 입력창에 주소 자동 입력
+                    imageUrlInput.value = data.data.url;
+                    showToast("이미지 업로드 성공! 📸");
+                } else {
+                    throw new Error("ImgBB API Error");
+                }
+            } catch (error) {
+                console.error("이미지 업로드 실패:", error);
+                showToast("이미지 업로드에 실패했습니다. 🥲");
+            } finally {
+                // 버튼 복구
+                uploadImageBtn.textContent = originalText;
+                uploadImageBtn.disabled = false;
+                // 파일 입력 초기화 (같은 파일 다시 선택 가능하게)
+                imageFileInput.value = "";
+            }
+        });
+    }
+
+    // 수정 모드 로직
     if (editDocId) {
         document.querySelector('h2').textContent = "레퍼런스 수정하기";
         document.getElementById('submit-btn').textContent = "수정 완료";
         
-        // [추가됨] 취소 버튼 활성화
         const cancelBtn = document.getElementById('cancel-btn');
         if (cancelBtn) {
-            cancelBtn.style.display = 'block'; // 버튼 보이기
-            cancelBtn.onclick = () => {
-                // 상세 페이지로 돌아가기
-                window.location.href = `detail.html?id=${editDocId}`;
-            };
+            cancelBtn.style.display = 'block'; 
+            cancelBtn.onclick = () => window.location.href = `detail.html?id=${editDocId}`;
         }
 
         try {
@@ -190,7 +244,6 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
 
     try {
         if (editDocId && firestoreRef) {
-            // [수정 모드]
             await updateDoc(firestoreRef, {
                 title: title,
                 category: finalCategory,
@@ -204,15 +257,10 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
                 tags: tags,
             });
             showToast("✨ 수정되었습니다!");
-            
-            setTimeout(() => {
-                window.location.href = `detail.html?id=${editDocId}`;
-            }, 1000);
+            setTimeout(() => { window.location.href = `detail.html?id=${editDocId}`; }, 1000);
 
         } else {
-            // [생성 모드]
             const newId = Date.now(); 
-
             await addDoc(collection(db, "references"), {
                 id: newId, 
                 title: title,
@@ -229,10 +277,7 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
                 createdAt: new Date().toISOString()
             });
             showToast("🎉 성공적으로 공유되었습니다!");
-            
-            setTimeout(() => {
-                window.location.href = `detail.html?id=${newId}`;
-            }, 1000);
+            setTimeout(() => { window.location.href = `detail.html?id=${newId}`; }, 1000);
         }
 
     } catch (error) {
