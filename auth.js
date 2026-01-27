@@ -1,65 +1,65 @@
-// auth.js (최종 수정본)
-
-import { firebaseConfig } from './config.js'; // 설정 가져오기
+// auth-status.js (내 서랍 버튼 추가됨)
+import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-// Firebase 앱 및 서비스 초기화
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// HTML 문서 로딩이 끝나면 실행될 코드
-document.addEventListener('DOMContentLoaded', () => {
+const authContainer = document.getElementById('auth-container');
 
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const loginBtn = document.getElementById('login-btn');
-    const signupBtn = document.getElementById('signup-btn');
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // 로그인 상태
+        const userInitial = user.email.charAt(0).toUpperCase(); // 이메일 첫 글자
+        
+        authContainer.innerHTML = `
+            <div class="user-menu" style="display: flex; align-items: center; gap: 15px;">
+                <a href="mypage.html" class="nav-btn" style="text-decoration: none; color: #333; font-weight: bold; font-size: 0.9rem;">
+                    📂 내 서랍
+                </a>
+                
+                <a href="upload.html" class="upload-btn">업로드</a>
+                
+                <div class="profile-circle" id="profile-btn">${userInitial}</div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <p class="user-email">${user.email}</p>
+                    <button id="logout-btn">로그아웃</button>
+                </div>
+            </div>
+        `;
 
-    // 입력 필드나 버튼이 없을 경우(다른 페이지에서 로드될 경우) 오류 방지
-    if (!emailInput || !passwordInput || !loginBtn || !signupBtn) {
-        return;
+        // 드롭다운 토글 기능
+        const profileBtn = document.getElementById('profile-btn');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // 로그아웃 기능
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                alert("로그아웃 되었습니다.");
+                window.location.href = "index.html";
+            } catch (error) {
+                console.error("로그아웃 실패:", error);
+            }
+        });
+
+        // 화면 다른 곳 클릭 시 드롭다운 닫기
+        document.addEventListener('click', (e) => {
+            if (!profileBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+
+    } else {
+        // 비로그인 상태
+        authContainer.innerHTML = `
+            <a href="login.html" class="login-btn">로그인 / 회원가입</a>
+        `;
     }
-
-    // 회원가입 버튼 클릭 이벤트
-    signupBtn.addEventListener('click', () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
-
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                alert("회원가입 성공! 바로 로그인됩니다.");
-                window.location.href = "index.html";
-            })
-            .catch((error) => {
-                let errorMessage = "회원가입에 실패했습니다.";
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = "이미 사용 중인 이메일입니다.";
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = "비밀번호는 6자리 이상이어야 합니다.";
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = "올바른 이메일 형식이 아닙니다.";
-                }
-                alert(errorMessage);
-            });
-    });
-
-    // 로그인 버튼 클릭 이벤트
-    loginBtn.addEventListener('click', () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
-
-        signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                alert("로그인 성공!");
-                window.location.href = "index.html";
-            })
-            .catch((error) => {
-                let errorMessage = "로그인에 실패했습니다.";
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                    errorMessage = "이메일 또는 비밀번호가 올바르지 않습니다.";
-                }
-                alert(errorMessage);
-            });
-    });
 });

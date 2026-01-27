@@ -2,42 +2,60 @@ import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, collection, getDocs, query, deleteDoc, where, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { showToast } from './toast.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 전역 변수
 let allData = [];
 let mySavedIds = new Set();
 let currentSort = 'id-desc';
 
-// ★ 태그 클릭 시 실행될 전역 함수 (window에 등록)
+// 스켈레톤 HTML 생성 함수 (8개 카드)
+function getSkeletonHTML() {
+    let html = '';
+    for(let i=0; i<8; i++) {
+        html += `
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-img"></div>
+            <div class="skeleton-content">
+                <div class="skeleton skeleton-text" style="width: 30%;"></div>
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text short"></div>
+                <div style="margin-top: 10px;">
+                    <div class="skeleton skeleton-tag"></div>
+                    <div class="skeleton skeleton-tag"></div>
+                </div>
+            </div>
+        </div>`;
+    }
+    return html;
+}
+
 window.searchByTag = function(tag) {
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
-        searchInput.value = tag; // 검색창에 태그 입력
-        searchInput.dispatchEvent(new Event('input')); // 검색 이벤트 강제 실행
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // 맨 위로 스크롤
+        searchInput.value = tag; 
+        searchInput.dispatchEvent(new Event('input')); 
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    refreshContent();
+    refreshContent(); // 여기서 스켈레톤 먼저 보여줌
 
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
 
-    // ★ URL 파라미터 확인 (상세페이지에서 태그 누르고 왔을 때)
     const params = new URLSearchParams(window.location.search);
     const urlSearchParam = params.get('search');
 
     if (urlSearchParam && searchInput) {
-        // 1. URL 검색어가 있으면 바로 검색 실행
         searchInput.value = urlSearchParam;
         sessionStorage.setItem('searchKeyword', urlSearchParam);
     } else {
-        // 2. 없으면 세션에 저장된 검색어 복구 (뒤로가기 시)
         const savedKeyword = sessionStorage.getItem('searchKeyword');
         if (savedKeyword && searchInput) {
             searchInput.value = savedKeyword;
@@ -64,7 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function refreshContent() {
     const cardWrapper = document.querySelector('.card-wrapper');
-    cardWrapper.innerHTML = '<p class="loading-indicator">데이터를 불러오는 중...</p>';
+    
+    // ★ 여기가 핵심: 로딩 텍스트 대신 스켈레톤 보여주기!
+    cardWrapper.innerHTML = getSkeletonHTML();
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -97,7 +117,6 @@ async function refreshContent() {
 
             sortAllData();
             
-            // 데이터 로드 후 검색어 적용
             const searchInput = document.getElementById('search-input');
             const initialKeyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
             filterAndRender(initialKeyword);
@@ -162,7 +181,6 @@ function createReferenceCard(data, isSaved) {
     const saveIcon = isSaved ? '✅' : '📂'; 
     const fallbackImage = "https://placehold.co/300x200?text=No+Image";
 
-    // ★ 태그 클릭 시 event.preventDefault()로 카드 이동 막고 검색 실행!
     const tagsHtml = (data.tags || []).map(tag => 
         `<span class="tag" onclick="event.preventDefault(); window.searchByTag('${tag}')">${tag}</span>`
     ).join('');
@@ -210,11 +228,11 @@ window.toggleSave = async function(refId, btnElement) {
                 referenceId: refId,
                 savedAt: new Date().toISOString()
             });
-            // showToast가 있다면 사용 가능 (여기선 alert 유지 혹은 통합 필요)
-            alert("내 서랍에 보관했습니다! 📂"); 
+            showToast("내 서랍에 보관했습니다! 📂"); 
         }
     } catch (error) {
         console.error(error);
-        btnElement.textContent = isCurrentlySaved ? '✅' : '📂'; 
+        btnElement.textContent = isCurrentlySaved ? '✅' : '📂';
+        showToast("오류가 발생했습니다.");
     }
 };

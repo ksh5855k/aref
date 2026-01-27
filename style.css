@@ -643,3 +643,255 @@ footer {
 .tag:hover {
     background-color: #ffccd5; /* ★ 추가됨: 마우스 올리면 진해짐 */
 }
+
+
+/* style.css 맨 아래 추가: 내 서랍(보관함) 페이지 디자인 */
+.drawer-header {
+    background-color: #f9f9f9;
+    padding: 40px 0;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 30px;
+}
+
+.drawer-title-box h2 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.drawer-title-box p {
+    color: #666;
+    font-size: 1rem;
+}
+
+
+/* style.css 맨 아래에 추가해주세요 */
+
+/* --- 상세 페이지 상단 네비게이션 (목록으로/이전/다음) --- */
+.navigation-bar {
+    max-width: 1200px;
+    margin: 20px auto 10px;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-text-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: #666;
+    cursor: pointer;
+    padding: 5px 0;
+}
+.nav-text-btn:hover { color: #333; text-decoration: underline; }
+
+.nav-arrows { display: flex; gap: 10px; }
+
+.nav-arrow-btn {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    color: #333;
+    transition: all 0.2s;
+}
+.nav-arrow-btn:hover:not(:disabled) { border-color: #FB3959; color: #FB3959; }
+.nav-arrow-btn:disabled { color: #eee; border-color: #eee; cursor: default; }
+
+
+/* --- 상세 페이지 액션 버튼들 (링크/저장/공유/삭제) --- */
+.detail-actions {
+    margin: 25px 0 40px; /* 위아래 여백 */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 버튼 사이 간격 */
+    flex-wrap: wrap;
+}
+
+/* 메인 버튼 (원본 링크) */
+.primary-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+.primary-btn:hover { background-color: #000; }
+
+/* 보조 버튼 (저장, 공유 등 아이콘 버튼) */
+.secondary-btn {
+    background-color: white;
+    border: 1px solid #ddd;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.secondary-btn:hover { border-color: #FB3959; color: #FB3959; background-color: #fff0f3; }
+
+/* 삭제 버튼 (빨간색) */
+.delete-btn {
+    margin-left: auto; /* 오른쪽 끝으로 밀기 */
+    background: white;
+    border: 1px solid #ff4d4d;
+    color: #ff4d4d;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.delete-btn:hover { background: #ff4d4d; color: white; }
+
+
+/* style.css 맨 아래에 추가 (상세 페이지 버튼 디자인) */
+
+/* 상단 네비게이션 (목록으로 / 이전 / 다음) */
+.navigation-bar {
+    max-width: 1200px;
+    margin: 20px auto 10px;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-text-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: #666;
+    cursor: pointer;
+    padding: 5px 0;
+}
+.nav-text-btn:hover { color: #333; text-decoration: underline; }
+
+.nav-arrows { display: flex; gap: 10px; }
+
+.nav-arrow-btn {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    color: #333;
+    transition: all 0.2s;
+}
+.nav-arrow-btn:hover:not(:disabled) { border-color: #FB3959; color: #FB3959; }
+.nav-arrow-btn:disabled { color: #eee; border-color: #eee; cursor: default; }
+
+/* 하단 액션 버튼들 (링크 / 저장 / 공유 / 삭제) */
+.detail-actions {
+    margin: 25px 0 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.primary-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+.primary-btn:hover { background-color: #000; }
+
+.secondary-btn {
+    background-color: white;
+    border: 1px solid #ddd;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+.secondary-btn:hover { border-color: #FB3959; color: #FB3959; background-color: #fff0f3; }
+
+.delete-btn {
+    margin-left: auto;
+    background: white;
+    border: 1px solid #ff4d4d;
+    color: #ff4d4d;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.delete-btn:hover { background: #ff4d4d; color: white; }
+
+
+/* style.css 맨 아래 추가: 스켈레톤 로딩 애니메이션 */
+
+/* 1. 반짝이는 효과 (Shimmer) */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* 2. 회색 박스 공통 스타일 */
+.skeleton {
+    background: #f0f0f0;
+    background-image: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite; /* 1.5초마다 반짝임 */
+    border-radius: 4px;
+}
+
+/* 3. 스켈레톤 카드 레이아웃 (기존 카드와 크기 비슷하게 맞춤) */
+.skeleton-card {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 400px; /* 대략적인 카드 높이 */
+}
+
+.skeleton-img {
+    width: 100%;
+    height: 200px; /* 썸네일 높이 */
+    display: block;
+}
+
+.skeleton-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.skeleton-title {
+    height: 26px;
+    width: 80%;
+    margin-bottom: 5px;
+}
+
+.skeleton-text {
+    height: 16px;
+    width: 100%;
+}
+
+.skeleton-text.short { width: 60%; }
+.skeleton-tag { width: 50px; height: 24px; display: inline-block; border-radius: 12px; margin-right: 5px; }
+
+

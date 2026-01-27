@@ -2,12 +2,13 @@ import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, doc, deleteDoc, updateDoc, increment, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { showToast } from './toast.js'; // ★ 토스트 알림 추가
+import { showToast } from './toast.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// 유튜브 ID 추출 함수
 function getYouTubeId(url) {
     if (!url) return null;
     url = url.trim();
@@ -17,6 +18,19 @@ function getYouTubeId(url) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // ★ 검색창 엔터 키 이벤트 (추가됨)
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const keyword = searchInput.value.trim();
+                if (keyword) {
+                    window.location.href = `index.html?search=${encodeURIComponent(keyword)}`;
+                }
+            }
+        });
+    }
+
     const params = new URLSearchParams(window.location.search);
     const docId = Number(params.get('id'));
 
@@ -50,12 +64,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("상세 정보 로딩 실패:", error);
     }
 
+    // 버튼 요소들
     const saveBtn = document.getElementById('detail-save-btn');
     const deleteBtn = document.getElementById('delete-btn');
+    const shareBtn = document.getElementById('share-btn');
+
+    // 공유하기 버튼 기능
+    if (shareBtn) {
+        shareBtn.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                showToast("링크가 복사되었습니다! 🔗");
+            } catch (err) {
+                console.error('복사 실패:', err);
+                showToast("링크 복사에 실패했습니다.");
+            }
+        };
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            deleteBtn.style.display = 'flex';
+            deleteBtn.style.display = 'inline-block';
             checkIfSaved(user, docId, saveBtn);
 
             saveBtn.onclick = () => toggleSave(user, docId, saveBtn);
@@ -63,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             deleteBtn.style.display = 'none';
             saveBtn.onclick = () => {
-                if(confirm("로그인이 필요한 기능입니다.")) window.location.href = "login.html";
+                if(confirm("로그인이 필요한 기능입니다. 로그인 하시겠습니까?")) window.location.href = "login.html";
             };
         }
     });
@@ -73,6 +102,8 @@ function renderDetail(data) {
     document.getElementById('detail-category').textContent = data.category;
     document.getElementById('detail-title').textContent = data.title;
     document.getElementById('detail-summary').textContent = data.summary;
+    
+    document.getElementById('detail-summary-long').textContent = data.detailSummary || data.summary;
     document.getElementById('detail-why').textContent = data.detailWhy || "내용 없음";
     document.getElementById('detail-how').textContent = data.detailHow || "내용 없음";
     
@@ -97,19 +128,15 @@ function renderDetail(data) {
     } else {
         videoContainer.style.display = 'none';
         videoContainer.innerHTML = '';
-        if(data.image) {
-            imgEl.src = data.image;
-            imgEl.style.display = 'block';
-            imgEl.onerror = function() {
-                this.onerror = null;
-                this.src = "https://placehold.co/600x400?text=No+Image";
-            };
-        } else {
-            imgEl.style.display = 'none';
-        }
+        
+        imgEl.style.display = 'block';
+        imgEl.onerror = function() {
+            this.onerror = null;
+            this.src = "https://placehold.co/600x400?text=No+Image";
+        };
+        imgEl.src = data.image || "https://placehold.co/600x400?text=No+Image";
     }
 
-    // ★ 태그 렌더링 (클릭 시 메인 검색으로 이동)
     const tagContainer = document.getElementById('detail-tags');
     tagContainer.innerHTML = '';
     (data.tags || []).forEach(tag => {
@@ -117,7 +144,6 @@ function renderDetail(data) {
         span.className = 'tag';
         span.textContent = tag;
         span.onclick = () => {
-            // 태그 클릭 시 검색어(쿼리 스트링)를 달고 메인으로 이동
             window.location.href = `index.html?search=${encodeURIComponent(tag)}`;
         };
         tagContainer.appendChild(span);
@@ -181,7 +207,7 @@ async function toggleSave(user, refId, btnElement) {
                 referenceId: refId,
                 savedAt: new Date().toISOString()
             });
-            showToast("내 서랍에 보관했습니다! 📂"); // ★ 토스트 적용
+            showToast("내 서랍에 보관했습니다! 📂");
         }
     } catch (error) {
         console.error(error);

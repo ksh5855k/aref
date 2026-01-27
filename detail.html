@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상세 정보 - 애이렙(A!Ref)</title>
+    <title>레퍼런스 상세 - A!Ref</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,62 +15,57 @@
                 <span class="search-icon">🔍</span>
             </div>
         </div>
-        <div id="auth-container"></div>
+        <div id="auth-container">
+            </div>
     </header>
 
     <div class="detail-container">
-        
-        <div class="detail-header">
-            <span id="detail-category" class="category-badge">카테고리</span>
-            
-            <div class="title-row">
-                <h2 id="detail-title">제목을 불러오는 중...</h2>
-                <button id="detail-save-btn" class="save-btn-large" title="내 서랍에 보관">📂</button>
+        <div class="navigation-bar">
+            <button id="back-to-list-btn" class="nav-text-btn">← 목록으로</button>
+            <div class="nav-arrows">
+                <button id="prev-btn" class="nav-arrow-btn" disabled>‹ 이전</button>
+                <button id="next-btn" class="nav-arrow-btn" disabled>다음 ›</button>
             </div>
-
-            <p class="detail-date" id="detail-date">2026.01.16</p>
         </div>
 
-        <div class="detail-body">
-            
-            <div id="video-container" class="video-wrapper" style="display: none;">
-                </div>
-
-            <img id="detail-image" src="" alt="참고 이미지">            
-
-            <div class="detail-section">
-                <h3>📌 한 줄 요약</h3>
-                <p id="detail-summary" class="highlight-text">내용을 불러오는 중입니다...</p>
+        <div class="detail-content-wrapper">
+            <div class="detail-media">
+                <div id="video-container" style="display:none;"></div>
+                <img id="detail-image" src="" alt="메인 이미지" style="display:none;">
             </div>
 
-            <div class="tag-container" id="detail-tags">
+            <div class="detail-info">
+                <span id="detail-category" class="category-badge">카테고리</span>
+                <h1 id="detail-title">제목 로딩 중...</h1>
+                <p id="detail-summary" class="detail-summary-text">요약 내용...</p>
+
+                <div class="detail-actions">
+                    <button id="go-link-btn" class="primary-btn">원본 링크로 이동 ↗</button>
+                    <button id="detail-save-btn" class="secondary-btn" title="보관함에 저장">📂</button>
+                    <button id="share-btn" class="secondary-btn" title="링크 복사하기">🔗</button>
+                    <button id="delete-btn" class="delete-btn" style="display: none;">삭제</button>
                 </div>
 
-            <div class="detail-section">
-                <h3>💡 Why it works</h3>
-                <p id="detail-why">분석 내용 로딩 중...</p>
-            </div>
-
-            <div class="detail-section">
-                <h3>🛠️ How to apply</h3>
-                <p id="detail-how">적용 방안 로딩 중...</p>
-            </div>
-            
-            <div class="action-area">
-                <button id="go-link-btn" class="link-btn">자세한 내용 확인하기 🔗</button>
-
-                <div class="navigation-row">
-                    <button id="prev-btn" class="nav-btn" title="이전 레퍼런스">←</button>
-                    
-                    <button id="back-to-list-btn" class="back-btn">목록으로 돌아가기</button>
-                    
-                    <button id="delete-btn" class="delete-btn" style="display: none;">자료 삭제 🗑️</button>
-                    
-                    <button id="next-btn" class="nav-btn" title="다음 레퍼런스">→</button>
+                <div class="detail-section">
+                    <h3>캠페인 요약</h3>
+                    <p id="detail-summary-long"></p>
                 </div>
+
+                <div class="detail-section">
+                    <h3>Why it works</h3>
+                    <p id="detail-why"></p>
+                </div>
+
+                <div class="detail-section">
+                    <h3>How to apply</h3>
+                    <p id="detail-how"></p>
+                </div>
+
+                <div id="detail-tags" class="tags-container"></div>
             </div>
         </div>
     </div>
+
     <footer>
         <p>&copy; 2026 A!Ref. All Rights Reserved.</p>
     </footer>
