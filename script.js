@@ -12,20 +12,12 @@ let allData = [];
 let mySavedIds = new Set();
 let currentSort = 'id-desc';
 
-// 페이지 로드 시 저장된 카테고리가 있으면 가져오고, 없으면 'all'
 let currentCategory = sessionStorage.getItem('selectedCategory') || 'all'; 
 
-// 정식 카테고리 목록
 const STANDARD_CATEGORIES = [
-    '디지털', 
-    '인쇄/옥외', 
-    '프로모션', 
-    '콘텐츠',
-    '인사이트',
-    '캠페인'
+    '디지털', '인쇄/옥외', '프로모션', '콘텐츠', '인사이트', '캠페인'
 ];
 
-// 스켈레톤 HTML 생성
 function getSkeletonHTML() {
     let html = '';
     for(let i=0; i<8; i++) {
@@ -47,14 +39,11 @@ function getSkeletonHTML() {
     return html;
 }
 
-// 카테고리 클릭 시 저장소에 저장하는 로직
 window.filterCategory = function(category, btnElement) {
     currentCategory = category;
     sessionStorage.setItem('selectedCategory', currentCategory);
-    
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     btnElement.classList.add('active');
-
     const searchInput = document.getElementById('search-input');
     const keyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
     filterAndRender(keyword);
@@ -70,12 +59,10 @@ window.searchByTag = function(tag) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 탭 상태 복구
     const tabs = document.querySelectorAll('.tab-btn');
     tabs.forEach(btn => {
         btn.classList.remove('active');
         let btnCategory = 'all';
-        
         if (btn.getAttribute('onclick').includes("'디지털'")) btnCategory = '디지털';
         else if (btn.getAttribute('onclick').includes("'인쇄/옥외'")) btnCategory = '인쇄/옥외';
         else if (btn.getAttribute('onclick').includes("'프로모션'")) btnCategory = '프로모션';
@@ -84,17 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (btn.getAttribute('onclick').includes("'캠페인'")) btnCategory = '캠페인';
         else if (btn.getAttribute('onclick').includes("'기타'")) btnCategory = '기타';
 
-        if(currentCategory === btnCategory) {
-            btn.classList.add('active');
-        }
+        if(currentCategory === btnCategory) btn.classList.add('active');
     });
 
     refreshContent(); 
 
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
-
-    // URL 검색어 처리
     const params = new URLSearchParams(window.location.search);
     const urlSearchParam = params.get('search');
 
@@ -103,9 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('searchKeyword', urlSearchParam);
     } else {
         const savedKeyword = sessionStorage.getItem('searchKeyword');
-        if (savedKeyword && searchInput) {
-            searchInput.value = savedKeyword;
-        }
+        if (savedKeyword && searchInput) searchInput.value = savedKeyword;
     }
 
     if (searchInput) {
@@ -145,8 +126,6 @@ async function refreshContent() {
         try {
             const refSnapshot = await getDocs(collection(db, "references"));
             const allSavesSnapshot = await getDocs(collection(db, "userSaves"));
-            
-            // 전체 저장 수 계산
             const saveCounts = {}; 
             allSavesSnapshot.forEach(doc => {
                 const rid = doc.data().referenceId;
@@ -156,12 +135,11 @@ async function refreshContent() {
             allData = [];
             refSnapshot.forEach(doc => {
                 const data = doc.data();
-                data.saveCount = saveCounts[data.id] || 0; // 저장 수 데이터에 추가
+                data.saveCount = saveCounts[data.id] || 0;
                 allData.push(data);
             });
 
             sortAllData();
-            
             const searchInput = document.getElementById('search-input');
             const initialKeyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
             filterAndRender(initialKeyword);
@@ -178,13 +156,7 @@ function sortAllData() {
     allData.sort((a, b) => {
         let valA = a[field] || 0;
         let valB = b[field] || 0;
-        
-        // 저장순일 때 예외 처리
-        if (field === 'saves') {
-            valA = a.saveCount || 0;
-            valB = b.saveCount || 0;
-        }
-        
+        if (field === 'saves') { valA = a.saveCount || 0; valB = b.saveCount || 0; }
         if (direction === 'desc') return valB - valA;
         else return valA - valB;
     });
@@ -197,23 +169,14 @@ function filterAndRender(keyword) {
     const filtered = allData.filter(item => {
         if (currentCategory !== 'all') {
             if (currentCategory === '기타') {
-                if (STANDARD_CATEGORIES.includes(item.category)) {
-                    return false;
-                }
+                if (STANDARD_CATEGORIES.includes(item.category)) return false;
             } else {
-                if (item.category !== currentCategory) {
-                    return false;
-                }
+                if (item.category !== currentCategory) return false;
             }
         }
-
         const searchableText = [
-            item.title,
-            item.category,
-            item.summary,
-            item.detailWhy,
-            item.detailHow,
-            ...(item.tags || [])
+            item.title, item.category, item.summary, 
+            item.detailWhy, item.detailHow, ...(item.tags || [])
         ].join(' ').toLowerCase();
 
         return searchableText.includes(keyword);
@@ -279,25 +242,152 @@ window.toggleSave = async function(refId, btnElement) {
         if(confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) window.location.href = "login.html";
         return;
     }
-    const isCurrentlySaved = btnElement.textContent === '✅';
-    btnElement.textContent = isCurrentlySaved ? '📂' : '✅'; 
 
-    try {
-        if (isCurrentlySaved) {
+    const isCurrentlySaved = btnElement.textContent === '✅';
+
+    if (isCurrentlySaved) {
+        if(!confirm("내 서랍에서 삭제하시겠습니까?")) return;
+        
+        try {
             const q = query(collection(db, "userSaves"), where("uid", "==", user.uid), where("referenceId", "==", refId));
             const snapshot = await getDocs(q);
             snapshot.forEach(async (doc) => await deleteDoc(doc.ref));
-        } else {
-            await addDoc(collection(db, "userSaves"), {
-                uid: user.uid,
-                referenceId: refId,
-                savedAt: new Date().toISOString()
-            });
-            showToast("내 서랍에 보관했습니다! 📂"); 
+            
+            btnElement.textContent = '📂';
+            showToast("내 서랍에서 삭제되었습니다.");
+        } catch (error) {
+            console.error(error);
+            showToast("오류가 발생했습니다.");
         }
-    } catch (error) {
-        console.error(error);
-        btnElement.textContent = isCurrentlySaved ? '✅' : '📂';
-        showToast("오류가 발생했습니다.");
+        return;
+    }
+
+    openSaveModal(refId, btnElement);
+};
+
+// ★ 모달 로직 (정렬 기능 추가됨)
+async function openSaveModal(refId, btnElement) {
+    const modal = document.getElementById('save-modal-overlay');
+    const select = document.getElementById('modal-folder-select');
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+    const input = document.getElementById('modal-new-folder-input');
+    const user = auth.currentUser;
+
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    input.style.display = 'none';
+    input.value = '';
+    
+    select.innerHTML = '<option value="loading">폴더 불러오는 중...</option>';
+
+    try {
+        const q = query(collection(db, "folders"), where("uid", "==", user.uid));
+        const snapshot = await getDocs(q);
+        
+        // ★ [정렬 추가] 데이터를 배열로 만든 뒤 시간순(오래된 순) 정렬
+        let folders = [];
+        snapshot.forEach(doc => {
+            folders.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // 정렬 로직 (createdAt 기준 오름차순)
+        folders.sort((a, b) => {
+            if (a.createdAt < b.createdAt) return -1;
+            if (a.createdAt > b.createdAt) return 1;
+            return 0;
+        });
+
+        // 렌더링
+        select.innerHTML = ''; 
+        
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = '기본 보관함 (전체)';
+        select.appendChild(allOption);
+
+        folders.forEach(folder => {
+            const option = document.createElement('option');
+            option.value = folder.id;
+            option.textContent = `📂 ${folder.name}`;
+            select.appendChild(option);
+        });
+
+        const newOption = document.createElement('option');
+        newOption.value = 'create_new'; 
+        newOption.textContent = '➕ 새 폴더 추가';
+        newOption.style.fontWeight = 'bold';
+        newOption.style.color = '#333';
+        select.appendChild(newOption);
+
+    } catch (e) {
+        console.error("폴더 로드 실패", e);
+        select.innerHTML = '<option value="all">기본 보관함 (전체)</option>';
+    }
+
+    select.onchange = function() {
+        if (select.value === 'create_new') {
+            input.style.display = 'block'; 
+            input.focus();
+        } else {
+            input.style.display = 'none'; 
+        }
+    };
+
+    confirmBtn.onclick = () => confirmSaveInModal(refId, btnElement);
+}
+
+window.closeSaveModal = function() {
+    const modal = document.getElementById('save-modal-overlay');
+    const input = document.getElementById('modal-new-folder-input');
+    if(modal) modal.style.display = 'none';
+    if(input) {
+        input.value = '';
+        input.style.display = 'none';
     }
 };
+
+async function confirmSaveInModal(refId, btnElement) {
+    const user = auth.currentUser;
+    const select = document.getElementById('modal-folder-select');
+    const newFolderInput = document.getElementById('modal-new-folder-input');
+    
+    let targetFolderId = select.value;
+    let newFolderName = "";
+
+    try {
+        if (targetFolderId === 'create_new') {
+            newFolderName = newFolderInput.value.trim();
+            if (!newFolderName) {
+                alert("새 폴더 이름을 입력해주세요!");
+                return;
+            }
+            
+            const folderDoc = await addDoc(collection(db, "folders"), {
+                uid: user.uid,
+                name: newFolderName,
+                createdAt: new Date().toISOString()
+            });
+            targetFolderId = folderDoc.id; 
+        } 
+
+        await addDoc(collection(db, "userSaves"), {
+            uid: user.uid,
+            referenceId: refId,
+            folderId: targetFolderId, 
+            savedAt: new Date().toISOString()
+        });
+
+        btnElement.textContent = '✅';
+        closeSaveModal();
+        
+        const msg = (newFolderName) ? 
+            `📂 '${newFolderName}' 폴더에 저장했습니다!` : 
+            "내 서랍에 보관했습니다! 📂";
+        showToast(msg);
+
+    } catch (error) {
+        console.error("저장 실패:", error);
+        showToast("저장 중 오류가 발생했습니다.");
+    }
+}

@@ -44,6 +44,23 @@
         </div>
     </div>
 
+    <div id="save-modal-overlay" class="modal-overlay">
+        <div class="save-modal">
+            <h3>📂 어디에 보관할까요?</h3>
+            <div class="modal-controls">
+                <select id="modal-folder-select" class="modal-select">
+                    <option value="all">기본 보관함 (전체)</option>
+                </select>
+                
+                <input type="text" id="modal-new-folder-input" class="modal-input" placeholder="새 폴더 이름 입력 (선택사항)">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-cancel" onclick="closeSaveModal()">취소</button>
+                <button class="modal-btn btn-confirm" id="modal-confirm-btn">저장하기</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2026 A!Ref. All Rights Reserved.</p>
     </footer>

@@ -1053,3 +1053,83 @@ footer {
 .comment-delete-btn:hover { color: #ff4d4d; }
 
 
+/* style.css 맨 아래에 추가 */
+
+/* 저장 모달 오버레이 (배경 어둡게) */
+.modal-overlay {
+    display: none; /* 평소엔 숨김 */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 모달 창 디자인 */
+.save-modal {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    width: 320px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.save-modal h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+/* 모달 내부 입력 컨트롤 */
+.modal-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-select, .modal-input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 버튼 그룹 */
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-cancel { background: #f1f3f5; color: #555; }
+.btn-confirm { background: #333; color: white; }
+
+
+/* style.css 맨 아래 추가 */
+
+/* 새 폴더 입력창: 평소에는 숨김 */
+#modal-new-folder-input {
+    display: none; 
+    margin-top: 10px; /* 드롭다운과의 간격 */
+}
+
+
