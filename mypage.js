@@ -8,10 +8,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 스켈레톤 HTML 생성 함수 (보관함용)
+let savedDataList = []; 
+let currentSort = 'id-desc'; 
+
+// 스켈레톤 HTML
 function getSkeletonHTML() {
     let html = '';
-    for(let i=0; i<4; i++) { // 보관함은 4개 정도만 보여줘도 충분
+    for(let i=0; i<4; i++) {
         html += `
         <div class="skeleton-card">
             <div class="skeleton skeleton-img"></div>
@@ -28,6 +31,29 @@ function getSkeletonHTML() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const drawerList = document.getElementById('my-drawer-list');
+    
+    // 정렬 이벤트
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            renderDrawer(); 
+        });
+    }
+
+    // ★ [추가됨] 헤더 검색창 기능 연결
+    // 내 서랍에서 검색하면 -> 전체 검색(메인페이지)으로 이동
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const keyword = searchInput.value.trim();
+                if (keyword) {
+                    window.location.href = `index.html?search=${encodeURIComponent(keyword)}`;
+                }
+            }
+        });
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -36,46 +62,43 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // ★ 로딩 시작: 스켈레톤 보여주기
         drawerList.innerHTML = getSkeletonHTML();
 
         try {
-            const savesQuery = query(collection(db, "userSaves"), where("uid", "==", user.uid));
-            const savesSnapshot = await getDocs(savesQuery);
+            // 1. 내가 저장한 목록
+            const mySaveQ = query(collection(db, "userSaves"), where("uid", "==", user.uid));
+            const mySaveSnapshot = await getDocs(mySaveQ);
 
-            if (savesSnapshot.empty) {
+            if (mySaveSnapshot.empty) {
                 drawerList.innerHTML = '<div class="empty-message" style="text-align:center; padding: 50px;"><h3>텅 비어있어요 🗑️</h3><p>마음에 드는 레퍼런스를 저장해보세요!</p></div>';
                 return;
             }
 
-            const savedRefIds = [];
-            savesSnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.referenceId) savedRefIds.push(data.referenceId);
+            const mySavedRefIds = new Set();
+            mySaveSnapshot.forEach(doc => mySavedRefIds.add(doc.data().referenceId));
+
+            // 2. 전체 레퍼런스 가져오기
+            const refSnapshot = await getDocs(collection(db, "references"));
+            
+            // 3. 전체 저장 수 카운트
+            const allSavesSnapshot = await getDocs(collection(db, "userSaves"));
+            const saveCounts = {};
+            allSavesSnapshot.forEach(doc => {
+                const rid = doc.data().referenceId;
+                saveCounts[rid] = (saveCounts[rid] || 0) + 1;
             });
 
-            savedRefIds.reverse();
-
-            // 실제 데이터를 그리기 위해 비우기
-            drawerList.innerHTML = ''; 
-
-            for (const rid of savedRefIds) {
-                const q = query(collection(db, "references"), where("id", "==", rid));
-                const querySnapshot = await getDocs(q);
-
-                if (!querySnapshot.empty) {
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        const card = createDrawerCard(data, true); 
-                        drawerList.appendChild(card);
-                    });
+            // 4. 데이터 합치기
+            savedDataList = [];
+            refSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (mySavedRefIds.has(data.id)) {
+                    data.saveCount = saveCounts[data.id] || 0;
+                    savedDataList.push(data);
                 }
-            }
-            
-            // 다 돌았는데 혹시 렌더링 된 게 하나도 없으면 (원본 삭제 등)
-            if (drawerList.children.length === 0) {
-                 drawerList.innerHTML = '<div class="empty-message" style="text-align:center; padding: 50px;"><h3>텅 비어있어요 🗑️</h3><p>마음에 드는 레퍼런스를 저장해보세요!</p></div>';
-            }
+            });
+
+            renderDrawer();
 
         } catch (error) {
             console.error("내 서랍 로딩 실패:", error);
@@ -84,10 +107,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function createDrawerCard(data, isSaved) {
+function renderDrawer() {
+    const drawerList = document.getElementById('my-drawer-list');
+    drawerList.innerHTML = '';
+
+    if (savedDataList.length === 0) {
+         drawerList.innerHTML = '<div class="empty-message" style="text-align:center; padding: 50px;"><h3>텅 비어있어요 🗑️</h3><p>마음에 드는 레퍼런스를 저장해보세요!</p></div>';
+         return;
+    }
+
+    // 정렬
+    const [field, direction] = currentSort.split('-');
+    savedDataList.sort((a, b) => {
+        let valA = a[field] || 0;
+        let valB = b[field] || 0;
+        
+        if (field === 'saves') {
+            valA = a.saveCount || 0;
+            valB = b.saveCount || 0;
+        }
+
+        if (direction === 'desc') return valB - valA;
+        else return valA - valB;
+    });
+
+    savedDataList.forEach(data => {
+        const card = createDrawerCard(data);
+        drawerList.appendChild(card);
+    });
+}
+
+function createDrawerCard(data) {
     const div = document.createElement('div');
     div.className = 'reference-card';
-    const views = data.views || 0;
     const fallbackImage = "https://placehold.co/300x200?text=No+Image";
 
     div.innerHTML = `
@@ -102,7 +154,8 @@ function createDrawerCard(data, isSaved) {
                 <h2>${data.title}</h2>
                 <p class="summary">${data.summary}</p>
                 <div class="card-meta">
-                     <span class="view-count">👁️ ${views}</span>
+                     <span class="view-count">👁️ ${data.views || 0}</span>
+                     <span class="save-count" style="margin-left:8px; font-size:0.85em; color:#666;">📂 ${data.saveCount || 0}</span>
                 </div>
                 <div class="tags-wrapper">
                     ${(data.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
@@ -132,14 +185,10 @@ window.removeFromDrawer = async function(refId, btnElement) {
             card.style.transform = 'scale(0.9)';
             
             setTimeout(() => {
-                card.remove();
-                const drawerList = document.getElementById('my-drawer-list');
-                if (drawerList.children.length === 0) {
-                     drawerList.innerHTML = '<div class="empty-message" style="text-align:center; padding: 50px;"><h3>텅 비어있어요 🗑️</h3><p>마음에 드는 레퍼런스를 저장해보세요!</p></div>';
-                }
+                savedDataList = savedDataList.filter(item => item.id !== refId);
+                renderDrawer(); 
+                showToast("보관함에서 삭제되었습니다.");
             }, 300);
-
-            showToast("보관함에서 삭제되었습니다.");
 
         } catch (error) {
             console.error(error);

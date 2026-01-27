@@ -42,7 +42,10 @@
                 <div class="detail-actions">
                     <button id="go-link-btn" class="primary-btn">원본 링크로 이동 ↗</button>
                     <button id="detail-save-btn" class="secondary-btn" title="보관함에 저장">📂</button>
+                    
                     <button id="share-btn" class="secondary-btn" title="링크 복사하기">🔗</button>
+                    
+                    <button id="edit-btn" class="secondary-btn" title="게시글 수정" style="display:none;">✏️</button>
                     <button id="delete-btn" class="delete-btn" style="display: none;">삭제</button>
                 </div>
 
@@ -62,6 +65,23 @@
                 </div>
 
                 <div id="detail-tags" class="tags-container"></div>
+
+                <div class="comment-section">
+                    <h3 class="section-title">💬 인사이트 톡 (Comments)</h3>
+                    
+                    <div id="comment-form-container" style="display: none;">
+                        <textarea id="comment-input" placeholder="이 레퍼런스에서 발견한 인사이트를 나눠주세요! (매너 있는 대화 부탁드려요 🙏)"></textarea>
+                        <button id="submit-comment-btn" class="primary-btn small-btn">등록</button>
+                    </div>
+                    
+                    <div id="login-request-msg" style="display: none; text-align: center; margin: 20px 0; color: #666;">
+                        <p>로그인하고 인사이트를 남겨보세요! <a href="login.html" style="color: #FB3959; font-weight: bold;">로그인하기</a></p>
+                    </div>
+
+                    <div id="comments-list" class="comments-list">
+                        <p class="loading-text">댓글을 불러오는 중...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

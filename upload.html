@@ -22,8 +22,23 @@
     <div class="upload-container">
         <h2>새로운 레퍼런스 공유하기</h2>
         <form id="upload-form">
-            <label for="upload-category">카테고리</label>
-            <input type="text" id="upload-category" placeholder="예: TVC, 디지털 캠페인, 프로모션" required>
+            <div class="form-group">
+                <label for="category-select">카테고리 <span style="color: red;">*</span></label>
+                <select id="category-select" class="form-input" style="width: 100%; padding: 10px; margin-bottom: 10px;" required>
+                    <option value="" disabled selected>카테고리를 선택해주세요</option>
+                    <option value="디지털">디지털 (Digital)</option>
+                    <option value="인쇄/옥외">인쇄/옥외 (Print/OOH)</option>
+                    <option value="프로모션">프로모션 (Promotion)</option>
+                    <option value="콘텐츠">콘텐츠 (Content)</option>
+                    <option value="인사이트">인사이트 (Insight)</option>
+                    <option value="캠페인">캠페인 (Campaign)</option>
+                    <option value="custom">기타 (직접 입력)</option>
+                </select>
+                
+                <input type="text" id="custom-category-input" placeholder="새로운 카테고리 이름을 입력하세요 (예: 인스타 매거진)" 
+                       style="display: none; margin-top: 5px;">
+                <p style="font-size: 0.85em; color: #888; margin-top: 5px;">* 메인 탭에 없는 분류라면 '기타'를 선택해 직접 입력해주세요.</p>
+            </div>
 
             <label for="upload-title">제목</label>
             <input type="text" id="upload-title" placeholder="레퍼런스 제목을 입력하세요" required>

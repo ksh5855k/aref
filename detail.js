@@ -8,7 +8,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 유튜브 ID 추출 함수
+// 유튜브 ID 추출
 function getYouTubeId(url) {
     if (!url) return null;
     url = url.trim();
@@ -18,7 +18,7 @@ function getYouTubeId(url) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ★ 검색창 엔터 키 이벤트 (추가됨)
+    // 검색창 엔터키 이벤트
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('keydown', (e) => {
@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = document.data();
             await updateDoc(document.ref, { views: increment(1) });
             renderDetail(data);
+            
+            // 댓글 불러오기
+            loadComments(docId);
         });
 
     } catch (error) {
@@ -68,8 +71,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const saveBtn = document.getElementById('detail-save-btn');
     const deleteBtn = document.getElementById('delete-btn');
     const shareBtn = document.getElementById('share-btn');
+    const editBtn = document.getElementById('edit-btn');
+    
+    // 댓글 관련 요소
+    const commentForm = document.getElementById('comment-form-container');
+    const loginMsg = document.getElementById('login-request-msg');
+    const submitCommentBtn = document.getElementById('submit-comment-btn');
 
-    // 공유하기 버튼 기능
+    // 링크 복사하기 (기존 유지)
     if (shareBtn) {
         shareBtn.onclick = async () => {
             try {
@@ -82,21 +91,153 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
+    // 수정 버튼 클릭 시 이동
+    if (editBtn) {
+        editBtn.onclick = () => {
+            window.location.href = `upload.html?id=${docId}`;
+        };
+    }
+
+    // 댓글 등록 버튼 클릭 시
+    if (submitCommentBtn) {
+        submitCommentBtn.onclick = async () => {
+            const input = document.getElementById('comment-input');
+            const content = input.value.trim();
+            const user = auth.currentUser;
+
+            if (!content) {
+                alert("내용을 입력해주세요.");
+                return;
+            }
+            if (!user) return;
+
+            try {
+                await addDoc(collection(db, "comments"), {
+                    referenceId: docId,
+                    uid: user.uid,
+                    author: user.email.split('@')[0],
+                    content: content,
+                    createdAt: new Date().toISOString()
+                });
+                
+                input.value = ''; 
+                showToast("댓글이 등록되었습니다. 💬");
+                loadComments(docId); 
+
+            } catch (error) {
+                console.error("댓글 등록 실패:", error);
+                showToast("오류가 발생했습니다.");
+            }
+        };
+    }
+
+    // 인증 상태 체크
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             deleteBtn.style.display = 'inline-block';
+            editBtn.style.display = 'inline-block';
+            
+            if(commentForm) commentForm.style.display = 'flex';
+            if(loginMsg) loginMsg.style.display = 'none';
+
             checkIfSaved(user, docId, saveBtn);
 
             saveBtn.onclick = () => toggleSave(user, docId, saveBtn);
             deleteBtn.onclick = () => deleteReference(firestoreDocId);
         } else {
             deleteBtn.style.display = 'none';
+            editBtn.style.display = 'none';
+            
+            if(commentForm) commentForm.style.display = 'none';
+            if(loginMsg) loginMsg.style.display = 'block';
+
             saveBtn.onclick = () => {
                 if(confirm("로그인이 필요한 기능입니다. 로그인 하시겠습니까?")) window.location.href = "login.html";
             };
         }
+        if(firestoreDocId || docId) loadComments(docId);
     });
 });
+
+// 댓글 목록 불러오기 함수
+async function loadComments(refId) {
+    const listContainer = document.getElementById('comments-list');
+    const user = auth.currentUser;
+
+    if (!listContainer) return;
+
+    try {
+        const q = query(collection(db, "comments"), where("referenceId", "==", refId));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            listContainer.innerHTML = '<p class="empty-message" style="font-size: 0.9rem;">아직 댓글이 없어요. 첫 번째 인사이트를 남겨주세요! 👇</p>';
+            return;
+        }
+
+        let comments = [];
+        snapshot.forEach(doc => {
+            comments.push({ id: doc.id, ...doc.data() });
+        });
+
+        // 최신순 정렬
+        comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        listContainer.innerHTML = ''; 
+
+        comments.forEach(comment => {
+            const dateStr = new Date(comment.createdAt).toLocaleDateString();
+            const isMyComment = user && user.uid === comment.uid;
+            
+            const deleteBtnHtml = isMyComment 
+                ? `<button class="comment-delete-btn" onclick="deleteComment('${comment.id}', ${refId})">삭제</button>` 
+                : '';
+
+            const div = document.createElement('div');
+            div.className = 'comment-item';
+            div.innerHTML = `
+                <div class="comment-meta">
+                    <span class="comment-author">${comment.author}</span>
+                    <div style="display:flex; gap:10px;">
+                        <span>${dateStr}</span>
+                        ${deleteBtnHtml}
+                    </div>
+                </div>
+                <div class="comment-text">${escapeHtml(comment.content)}</div>
+            `;
+            listContainer.appendChild(div);
+        });
+
+    } catch (error) {
+        console.error("댓글 로딩 중 에러:", error);
+        listContainer.innerHTML = '<p class="error-message">댓글을 불러오지 못했습니다.</p>';
+    }
+}
+
+// XSS 방지용
+function escapeHtml(text) {
+    if (!text) return "";
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// 댓글 삭제 함수
+window.deleteComment = async function(commentId, refId) {
+    if (confirm("댓글을 삭제하시겠습니까?")) {
+        try {
+            await deleteDoc(doc(db, "comments", commentId));
+            showToast("댓글이 삭제되었습니다.");
+            loadComments(refId); 
+        } catch (error) {
+            console.error(error);
+            showToast("삭제 실패");
+        }
+    }
+};
 
 function renderDetail(data) {
     document.getElementById('detail-category').textContent = data.category;
@@ -207,7 +348,7 @@ async function toggleSave(user, refId, btnElement) {
                 referenceId: refId,
                 savedAt: new Date().toISOString()
             });
-            showToast("내 서랍에 보관했습니다! 📂");
+            showToast("내 서랍에 보관되었습니다! 📂"); 
         }
     } catch (error) {
         console.error(error);

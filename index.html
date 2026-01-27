@@ -3,34 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>애이렙 (A!Ref)</title>
+    <title>A!Ref - 마케터의 레퍼런스 저장소</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="sticky-header">
-    <div class="header-left">
-        <a href="index.html" class="logo-link" onclick="sessionStorage.clear();"><h1>A!Ref</h1></a>
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="키워드, 태그, 본문 내용 검색..." autocomplete="off">
-            <span class="search-icon">🔍</span>
+        <div class="header-left">
+            <a href="index.html" class="logo-link" onclick="sessionStorage.clear();"><h1>A!Ref</h1></a>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="키워드, 태그, 본문 내용 검색..." autocomplete="off">
+                <span class="search-icon">🔍</span>
+            </div>
         </div>
-    </div>
-    <div id="auth-container"></div>
-</header>
+        <div id="auth-container">
+            </div>
+    </header>
 
-<div class="filter-sort-container">
-    <div class="sort-group">
-        <select id="sort-select">
-            <option value="id-desc">최신순</option>
-            <option value="id-asc">오래된 순</option>
-            <option value="views-desc">조회수 높은 순</option>
-            <option value="saves-desc">저장 많은 순</option>
-        </select>
-    </div>
-</div>
+    <div class="main-container">
+        <div class="filter-bar">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="filterCategory('all', this)">전체</button>
+                <button class="tab-btn" onclick="filterCategory('디지털', this)">디지털</button>
+                <button class="tab-btn" onclick="filterCategory('인쇄/옥외', this)">인쇄/옥외</button>
+                <button class="tab-btn" onclick="filterCategory('프로모션', this)">프로모션</button>
+                <button class="tab-btn" onclick="filterCategory('콘텐츠', this)">콘텐츠</button>
+                <button class="tab-btn" onclick="filterCategory('인사이트', this)">인사이트</button>
+                <button class="tab-btn" onclick="filterCategory('캠페인', this)">캠페인</button>
+                <button class="tab-btn" onclick="filterCategory('기타', this)">기타</button>
+            </div>
 
-    <div class="card-wrapper">
-        <p class="loading-indicator">임무 자료를 불러오는 중입니다...</p>
+            <select id="sort-select" class="sort-dropdown">
+                <option value="id-desc">최신순</option>
+                <option value="views-desc">조회순</option>
+                <option value="saves-desc">저장순</option>
+            </select>
+        </div>
+
+        <div class="card-wrapper">
+            <p class="loading-indicator">데이터를 불러오는 중...</p>
+        </div>
     </div>
 
     <footer>
@@ -38,7 +49,6 @@
     </footer>
 
     <script type="module" src="script.js"></script>
-    
     <script type="module" src="auth-status.js"></script>
 </body>
 </html>

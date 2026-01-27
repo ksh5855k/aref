@@ -12,7 +12,20 @@ let allData = [];
 let mySavedIds = new Set();
 let currentSort = 'id-desc';
 
-// 스켈레톤 HTML 생성 함수 (8개 카드)
+// 페이지 로드 시 저장된 카테고리가 있으면 가져오고, 없으면 'all'
+let currentCategory = sessionStorage.getItem('selectedCategory') || 'all'; 
+
+// 정식 카테고리 목록
+const STANDARD_CATEGORIES = [
+    '디지털', 
+    '인쇄/옥외', 
+    '프로모션', 
+    '콘텐츠',
+    '인사이트',
+    '캠페인'
+];
+
+// 스켈레톤 HTML 생성
 function getSkeletonHTML() {
     let html = '';
     for(let i=0; i<8; i++) {
@@ -34,6 +47,19 @@ function getSkeletonHTML() {
     return html;
 }
 
+// 카테고리 클릭 시 저장소에 저장하는 로직
+window.filterCategory = function(category, btnElement) {
+    currentCategory = category;
+    sessionStorage.setItem('selectedCategory', currentCategory);
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    const searchInput = document.getElementById('search-input');
+    const keyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    filterAndRender(keyword);
+};
+
 window.searchByTag = function(tag) {
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
@@ -44,11 +70,31 @@ window.searchByTag = function(tag) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    refreshContent(); // 여기서 스켈레톤 먼저 보여줌
+    // 탭 상태 복구
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(btn => {
+        btn.classList.remove('active');
+        let btnCategory = 'all';
+        
+        if (btn.getAttribute('onclick').includes("'디지털'")) btnCategory = '디지털';
+        else if (btn.getAttribute('onclick').includes("'인쇄/옥외'")) btnCategory = '인쇄/옥외';
+        else if (btn.getAttribute('onclick').includes("'프로모션'")) btnCategory = '프로모션';
+        else if (btn.getAttribute('onclick').includes("'콘텐츠'")) btnCategory = '콘텐츠';
+        else if (btn.getAttribute('onclick').includes("'인사이트'")) btnCategory = '인사이트';
+        else if (btn.getAttribute('onclick').includes("'캠페인'")) btnCategory = '캠페인';
+        else if (btn.getAttribute('onclick').includes("'기타'")) btnCategory = '기타';
+
+        if(currentCategory === btnCategory) {
+            btn.classList.add('active');
+        }
+    });
+
+    refreshContent(); 
 
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
 
+    // URL 검색어 처리
     const params = new URLSearchParams(window.location.search);
     const urlSearchParam = params.get('search');
 
@@ -82,9 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function refreshContent() {
     const cardWrapper = document.querySelector('.card-wrapper');
-    
-    // ★ 여기가 핵심: 로딩 텍스트 대신 스켈레톤 보여주기!
-    cardWrapper.innerHTML = getSkeletonHTML();
+    cardWrapper.innerHTML = getSkeletonHTML(); 
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -102,6 +146,7 @@ async function refreshContent() {
             const refSnapshot = await getDocs(collection(db, "references"));
             const allSavesSnapshot = await getDocs(collection(db, "userSaves"));
             
+            // 전체 저장 수 계산
             const saveCounts = {}; 
             allSavesSnapshot.forEach(doc => {
                 const rid = doc.data().referenceId;
@@ -111,7 +156,7 @@ async function refreshContent() {
             allData = [];
             refSnapshot.forEach(doc => {
                 const data = doc.data();
-                data.saveCount = saveCounts[data.id] || 0; 
+                data.saveCount = saveCounts[data.id] || 0; // 저장 수 데이터에 추가
                 allData.push(data);
             });
 
@@ -133,10 +178,13 @@ function sortAllData() {
     allData.sort((a, b) => {
         let valA = a[field] || 0;
         let valB = b[field] || 0;
+        
+        // 저장순일 때 예외 처리
         if (field === 'saves') {
             valA = a.saveCount || 0;
             valB = b.saveCount || 0;
         }
+        
         if (direction === 'desc') return valB - valA;
         else return valA - valB;
     });
@@ -147,6 +195,18 @@ function filterAndRender(keyword) {
     cardWrapper.innerHTML = '';
 
     const filtered = allData.filter(item => {
+        if (currentCategory !== 'all') {
+            if (currentCategory === '기타') {
+                if (STANDARD_CATEGORIES.includes(item.category)) {
+                    return false;
+                }
+            } else {
+                if (item.category !== currentCategory) {
+                    return false;
+                }
+            }
+        }
+
         const searchableText = [
             item.title,
             item.category,
@@ -163,7 +223,11 @@ function filterAndRender(keyword) {
     sessionStorage.setItem('currentResults', JSON.stringify(resultIds));
 
     if (filtered.length === 0) {
-        cardWrapper.innerHTML = '<p class="empty-message">일치하는 인사이트가 없습니다. 🔍</p>';
+        cardWrapper.innerHTML = `
+            <div class="empty-message">
+                <p>아직 등록된 레퍼런스가 없어요.</p>
+                <p style="font-size: 0.9em; color: #888; margin-top: 5px;">이 키워드의 첫 번째 발견자가 되어주세요! 🕵️‍♀️</p>
+            </div>`;
         return;
     }
 
@@ -198,6 +262,7 @@ function createReferenceCard(data, isSaved) {
                 <p class="summary">${data.summary}</p>
                 <div class="card-meta">
                     <span class="view-count">👁️ ${views}</span>
+                    <span class="save-count" style="margin-left:8px; font-size:0.85em; color:#666;">📂 ${data.saveCount || 0}</span>
                 </div>
                 <div class="tags-wrapper">
                     ${tagsHtml}
