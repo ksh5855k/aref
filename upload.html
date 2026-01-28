@@ -86,8 +86,11 @@
             <label for="upload-summary" class="required-label">한 줄 요약</label>
             <textarea id="upload-summary" placeholder="카드의 메인 화면에 표시될 짧은 요약을 입력하세요" rows="2" required></textarea>
 
-            <label for="upload-tags">태그 (쉼표로 구분)</label>
-            <input type="text" id="upload-tags" placeholder="예: #영상미, #유머, #MZ세대">
+            <label for="upload-tags">태그</label>
+            <input type="text" id="upload-tags" style="display: none;">
+            <div class="tag-container" id="tag-container" onclick="document.getElementById('tag-input-visual').focus()">
+                <input type="text" id="tag-input-visual" placeholder="엔터(Enter)로 태그를 등록하세요" autocomplete="off">
+            </div>
 
             <label for="upload-image-url" class="required-label">이미지 주소(URL)</label>
             

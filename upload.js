@@ -14,6 +14,9 @@ const params = new URLSearchParams(window.location.search);
 const editDocId = params.get('id') ? Number(params.get('id')) : null;
 let firestoreRef = null;
 
+// ★ [추가됨] 태그 관리용 배열
+let tagList = [];
+
 function setupCategoryToggle() {
     const select = document.getElementById('category-select');
     const customInput = document.getElementById('custom-category-input');
@@ -49,6 +52,68 @@ function updateImagePreview() {
     }
 }
 
+// ★ [추가됨] 태그 렌더링 및 관리 함수
+function setupTagInput() {
+    const tagContainer = document.getElementById('tag-container');
+    const tagInputVisual = document.getElementById('tag-input-visual');
+    const hiddenInput = document.getElementById('upload-tags');
+
+    // 1. 화면 그리기 (배열 -> HTML)
+    function renderTags() {
+        // 기존 칩들 삭제 (input은 남김)
+        const chips = tagContainer.querySelectorAll('.tag-chip');
+        chips.forEach(chip => chip.remove());
+
+        // 배열 순서대로 칩 생성 (input 바로 앞에 삽입)
+        tagList.slice().reverse().forEach(tag => {
+            const chip = document.createElement('div');
+            chip.className = 'tag-chip';
+            chip.innerHTML = `
+                #${tag}
+                <span class="tag-close-btn" data-tag="${tag}">&times;</span>
+            `;
+            tagContainer.prepend(chip); // 맨 앞에 추가
+        });
+
+        // 숨겨진 input 값 업데이트 (서버 전송용)
+        hiddenInput.value = tagList.join(', ');
+    }
+
+    // 2. 키보드 이벤트 (엔터, 스페이스, 쉼표)
+    tagInputVisual.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+            e.preventDefault(); // 폼 제출 방지 & 문자 입력 방지
+            
+            const val = tagInputVisual.value.trim().replace(/,/g, '');
+            if (val && !tagList.includes(val)) {
+                tagList.push(val);
+                renderTags();
+                tagInputVisual.value = ''; // 입력창 비우기
+            } else if (tagList.includes(val)) {
+                tagInputVisual.value = ''; // 중복이면 그냥 비우기
+            }
+        }
+        // 백스페이스로 마지막 태그 삭제 기능
+        if (e.key === 'Backspace' && tagInputVisual.value === '' && tagList.length > 0) {
+            tagList.pop();
+            renderTags();
+        }
+    });
+
+    // 3. 삭제 버튼 클릭 이벤트 (이벤트 위임)
+    tagContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tag-close-btn')) {
+            const tagToRemove = e.target.getAttribute('data-tag');
+            tagList = tagList.filter(tag => tag !== tagToRemove);
+            renderTags();
+        }
+    });
+
+    // 외부에서 배열을 수정했을 때(수정 모드 등) 호출할 수 있게 전역에 연결하거나, 
+    // 여기서 리턴해주면 좋은데, 간단하게 renderTags를 전역 변수로 할당해둡니다.
+    window.renderTagsGlobal = renderTags;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     
     onAuthStateChanged(auth, (user) => {
@@ -58,7 +123,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    setupCategoryToggle(); 
+    setupCategoryToggle();
+    setupTagInput(); // ★ 태그 기능 초기화
 
     const imageUrlInput = document.getElementById('upload-image-url');
     if (imageUrlInput) {
@@ -148,7 +214,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     document.getElementById('upload-title').value = data.title;
                     document.getElementById('upload-summary').value = data.summary;
-                    document.getElementById('upload-tags').value = (data.tags || []).join(', ');
+                    
+                    // ★ [수정됨] 기존 태그 불러오기 로직
+                    // 기존: hiddenInput에 string으로 넣기
+                    // document.getElementById('upload-tags').value = (data.tags || []).join(', ');
+                    
+                    // 변경: tagList 배열에 넣고 화면 그리기
+                    tagList = data.tags || [];
+                    if (window.renderTagsGlobal) window.renderTagsGlobal();
+
                     document.getElementById('upload-image-url').value = data.image;
                     document.getElementById('upload-video').value = data.video || "";
                     document.getElementById('upload-link').value = data.link; 
@@ -248,8 +322,10 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
     const videoLink = document.getElementById('upload-video').value.trim();
     let imageUrl = document.getElementById('upload-image-url').value.trim(); 
     
-    const rawTags = document.getElementById('upload-tags').value;
-    const tags = rawTags.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+    // ★ [수정됨] 태그 가져오는 로직 (숨겨진 input 값 사용)
+    // tagList가 이미 관리되고 있지만, 안전하게 hiddenInput 값을 한 번 더 참조해도 됨.
+    // 하지만 tagList 배열 자체가 가장 최신 상태임.
+    const tags = tagList; // 배열 그대로 사용
 
     if (!imageUrl) {
         imageUrl = "https://placehold.co/600x400?text=No+Thumbnail";
@@ -300,7 +376,6 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
         console.error("업로드/수정 실패:", error);
         showToast("⚠️ 오류가 발생했습니다.");
         submitBtn.disabled = false;
-        // ★ 버튼 텍스트 복구 시에도 '업로드'로 변경
         submitBtn.textContent = editDocId ? "수정 완료" : "업로드";
     }
 });

@@ -50,12 +50,76 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 1. [기존] '전체 선택' 체크박스 클릭 시 -> 하위 카드들 모두 선택/해제
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            const checkboxes = document.querySelectorAll('.card-checkbox');
+            checkboxes.forEach(cb => cb.checked = isChecked);
+        });
+    }
+
+    // ★ [추가됨] 개별 카드 체크박스 클릭 시 -> '전체 선택' 체크박스 상태 동기화
+    if (drawerList) {
+        drawerList.addEventListener('change', (e) => {
+            // 클릭된 요소가 카드의 체크박스라면
+            if (e.target.classList.contains('card-checkbox')) {
+                const totalCheckboxes = document.querySelectorAll('.card-checkbox').length;
+                const checkedCheckboxes = document.querySelectorAll('.card-checkbox:checked').length;
+                
+                // 전체 개수와 체크된 개수가 같으면 '전체 선택' ON, 아니면 OFF
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = (totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
+                }
+            }
+        });
+    }
+
+    // 일괄 이동 버튼 이벤트
+    const bulkMoveBtn = document.getElementById('bulk-move-btn');
+    if (bulkMoveBtn) {
+        bulkMoveBtn.addEventListener('click', async () => {
+            const selectedIds = getSelectedIds(); 
+            const targetFolderId = document.getElementById('bulk-folder-select').value;
+
+            if (selectedIds.length === 0) {
+                alert("선택된 항목이 없습니다.");
+                return;
+            }
+            if (!targetFolderId) {
+                alert("이동할 폴더를 선택해주세요.");
+                return;
+            }
+
+            if (confirm(`${selectedIds.length}개의 항목을 이동하시겠습니까?`)) {
+                await bulkMoveItems(selectedIds, targetFolderId);
+            }
+        });
+    }
+
+    // 일괄 삭제 버튼 이벤트
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', async () => {
+            const selectedIds = getSelectedIds();
+            
+            if (selectedIds.length === 0) {
+                alert("선택된 항목이 없습니다.");
+                return;
+            }
+
+            if (confirm(`정말 ${selectedIds.length}개의 항목을 삭제하시겠습니까? (복구 불가)`)) {
+                await bulkDeleteItems(selectedIds);
+            }
+        });
+    }
+
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            // ★ 수정됨: 로그아웃 버튼을 눌러서 나가는 중이라면 경고창 무시
             if (sessionStorage.getItem('isLoggingOut')) {
-                sessionStorage.removeItem('isLoggingOut'); // 깃발 제거
-                return; // 아무것도 안 하고 조용히 있음 (auth-status.js가 페이지 이동시킴)
+                sessionStorage.removeItem('isLoggingOut'); 
+                return; 
             }
 
             alert("로그인이 필요한 서비스입니다.");
@@ -69,7 +133,55 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ★ [정렬 기능 추가] 폴더 목록 불러오기
+// 체크된 항목들의 saveDocId 반환
+function getSelectedIds() {
+    const checkboxes = document.querySelectorAll('.card-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// 일괄 이동 함수
+async function bulkMoveItems(saveDocIds, folderId) {
+    try {
+        const promises = saveDocIds.map(id => {
+            const docRef = doc(db, "userSaves", id);
+            return updateDoc(docRef, { folderId: folderId });
+        });
+
+        await Promise.all(promises);
+        showToast("📦 이동되었습니다!");
+        
+        loadSavedData(auth.currentUser);
+        // 작업 후 전체선택 해제
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+
+    } catch (error) {
+        console.error("일괄 이동 실패:", error);
+        alert("이동 중 오류가 발생했습니다.");
+    }
+}
+
+// 일괄 삭제 함수
+async function bulkDeleteItems(saveDocIds) {
+    try {
+        const promises = saveDocIds.map(id => {
+            return deleteDoc(doc(db, "userSaves", id));
+        });
+
+        await Promise.all(promises);
+        showToast("🗑️ 삭제되었습니다!");
+        
+        loadSavedData(auth.currentUser);
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+
+    } catch (error) {
+        console.error("일괄 삭제 실패:", error);
+        alert("삭제 중 오류가 발생했습니다.");
+    }
+}
+
+// 폴더 목록 불러오기
 async function loadFolders(user) {
     try {
         const q = query(collection(db, "folders"), where("uid", "==", user.uid));
@@ -79,7 +191,6 @@ async function loadFolders(user) {
             myFolders.push({ id: doc.id, ...doc.data() });
         });
         
-        // ★ 생성 시간(createdAt) 순서대로 정렬 (오래된 것 -> 최신)
         myFolders.sort((a, b) => {
             if (a.createdAt < b.createdAt) return -1;
             if (a.createdAt > b.createdAt) return 1;
@@ -94,8 +205,14 @@ async function loadFolders(user) {
 
 function renderFolderTabs() {
     const container = document.getElementById('folder-tabs-container');
+    const bulkSelect = document.getElementById('bulk-folder-select');
+
     if (!container) return;
     container.innerHTML = '';
+    
+    if (bulkSelect) {
+        bulkSelect.innerHTML = '<option value="">이동할 폴더 선택...</option>';
+    }
 
     const allBtn = document.createElement('button');
     allBtn.className = `folder-btn ${currentFolderId === 'all' ? 'active' : ''}`;
@@ -115,6 +232,13 @@ function renderFolderTabs() {
         btn.onclick = () => switchFolder(folder.id);
         
         container.appendChild(btn);
+
+        if (bulkSelect) {
+            const option = document.createElement('option');
+            option.value = folder.id;
+            option.textContent = `📂 ${folder.name}`;
+            bulkSelect.appendChild(option);
+        }
     });
 
     const addBtn = document.createElement('button');
@@ -137,20 +261,7 @@ async function createNewFolder() {
         });
         
         showToast(`📂 '${name}' 폴더가 생성되었습니다.`);
-        
-        const newFolder = { id: docRef.id, name: name.trim() };
-        
-        // 새 폴더는 맨 뒤에 추가
-        myFolders.push(newFolder);
-        renderFolderTabs(); 
-        
-        const allSelects = document.querySelectorAll('.folder-select-mini');
-        allSelects.forEach(select => {
-            const option = document.createElement('option');
-            option.value = newFolder.id;
-            option.textContent = `📂 ${newFolder.name}`;
-            select.appendChild(option);
-        });
+        loadFolders(user);
 
     } catch (e) {
         console.error(e);
@@ -180,6 +291,10 @@ function switchFolder(folderId) {
     currentFolderId = folderId;
     renderFolderTabs(); 
     renderDrawer(); 
+    
+    // 폴더 변경 시 전체 선택 해제
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
 }
 
 async function loadSavedData(user) {
@@ -283,6 +398,8 @@ function createDrawerCard(data) {
     });
 
     div.innerHTML = `
+        <input type="checkbox" class="card-checkbox" value="${data.saveDocId}" onclick="event.stopPropagation()">
+
         <div class="save-button-container">
            <button class="save-btn" onclick="removeFromDrawer('${data.id}', '${data.saveDocId}', this)">✅</button>
         </div>
