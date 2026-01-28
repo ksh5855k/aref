@@ -1402,3 +1402,34 @@ footer {
 }
 
 
+
+/* 이미지 미리보기 컨테이너 */
+#image-preview-container {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    text-align: center;
+    display: none; /* 기본적으로는 숨김 */
+}
+
+/* 실제 미리보기 이미지 스타일 */
+#image-preview {
+    max-width: 100%;
+    max-height: 300px; /* 너무 길어지지 않게 제한 */
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    object-fit: contain;
+}
+
+/* 미리보기 라벨 */
+.preview-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+

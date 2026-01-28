@@ -10,11 +10,13 @@ const authContainer = document.getElementById('auth-container');
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // [로그인 상태]
-        // 1. 유저 이름(이메일 앞부분)
-        // 2. 내 서랍 (검은 버튼)
-        // 3. 로그아웃 (회색 버튼)
+        // 1. 유저 이름
+        // 2. 업로드 버튼 (이모지 제거, 텍스트 변경)
+        // 3. 내 서랍 버튼
+        // 4. 로그아웃 버튼
         authContainer.innerHTML = `
             <span class="user-name">${user.email.split('@')[0]}님</span>
+            <a href="upload.html" class="header-btn">업로드</a>
             <a href="mypage.html" class="header-btn">📂 내 서랍</a>
             <button id="logout-btn" class="header-btn logout-btn-style">로그아웃</button>
         `;
@@ -35,7 +37,6 @@ onAuthStateChanged(auth, (user) => {
 
     } else {
         // [비로그인 상태]
-        // 회원가입 버튼 삭제됨. 로그인 버튼만 표시.
         authContainer.innerHTML = `
             <a href="login.html" class="header-btn">로그인</a>
         `;

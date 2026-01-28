@@ -4,9 +4,7 @@ import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { showToast } from './toast.js';
 
-// ★★★ 여기에 ImgBB API 키를 붙여넣으세요! ★★★
-const IMGBB_API_KEY = "0a10f7852c88538fd64853b78e9e3cad"; 
-// 예: "a1b2c3d4e5f6..." (따옴표 안에 넣으세요)
+const IMGBB_API_KEY = "0a10f7852c88538fd64853b78e9e3cad";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -33,6 +31,24 @@ function setupCategoryToggle() {
     });
 }
 
+function updateImagePreview() {
+    const urlInput = document.getElementById('upload-image-url');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImg = document.getElementById('image-preview');
+    
+    const url = urlInput.value.trim();
+
+    if (url) {
+        previewImg.src = url;
+        previewContainer.style.display = 'block';
+        previewImg.onerror = () => {
+            previewContainer.style.display = 'none';
+        };
+    } else {
+        previewContainer.style.display = 'none';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     
     onAuthStateChanged(auth, (user) => {
@@ -44,29 +60,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupCategoryToggle(); 
 
-    // 링크 크롤링 버튼
+    const imageUrlInput = document.getElementById('upload-image-url');
+    if (imageUrlInput) {
+        imageUrlInput.addEventListener('input', updateImagePreview);
+    }
+
     const fetchBtn = document.getElementById('fetch-btn');
     if (fetchBtn) {
         fetchBtn.addEventListener('click', fetchMetaData);
     }
 
-    // ★ [추가됨] 이미지 파일 업로드 로직
     const imageFileInput = document.getElementById('image-file-input');
     const uploadImageBtn = document.getElementById('upload-image-btn');
-    const imageUrlInput = document.getElementById('upload-image-url');
 
-    // 1. 버튼 누르면 숨겨진 파일창 열기
     if (uploadImageBtn && imageFileInput) {
         uploadImageBtn.addEventListener('click', () => {
             imageFileInput.click();
         });
 
-        // 2. 파일을 선택하면 ImgBB로 업로드 시작
         imageFileInput.addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (!file) return;
 
-            // 로딩 표시
             const originalText = uploadImageBtn.textContent;
             uploadImageBtn.textContent = "업로드 중...⏳";
             uploadImageBtn.disabled = true;
@@ -75,7 +90,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const formData = new FormData();
                 formData.append("image", file);
 
-                // ImgBB API 호출
                 const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
                     method: "POST",
                     body: formData
@@ -84,9 +98,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const data = await response.json();
 
                 if (data.success) {
-                    // 성공 시 URL 입력창에 주소 자동 입력
                     imageUrlInput.value = data.data.url;
                     showToast("이미지 업로드 성공! 📸");
+                    updateImagePreview();
                 } else {
                     throw new Error("ImgBB API Error");
                 }
@@ -94,16 +108,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error("이미지 업로드 실패:", error);
                 showToast("이미지 업로드에 실패했습니다. 🥲");
             } finally {
-                // 버튼 복구
                 uploadImageBtn.textContent = originalText;
                 uploadImageBtn.disabled = false;
-                // 파일 입력 초기화 (같은 파일 다시 선택 가능하게)
                 imageFileInput.value = "";
             }
         });
     }
 
-    // 수정 모드 로직
     if (editDocId) {
         document.querySelector('h2').textContent = "레퍼런스 수정하기";
         document.getElementById('submit-btn').textContent = "수정 완료";
@@ -144,6 +155,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.getElementById('upload-detail-summary').value = data.detailSummary || "";
                     document.getElementById('upload-detail-why').value = data.detailWhy || "";
                     document.getElementById('upload-detail-how').value = data.detailHow || "";
+
+                    updateImagePreview();
                 });
             } else {
                 alert("존재하지 않는 게시글입니다.");
@@ -189,7 +202,10 @@ async function fetchMetaData() {
         const ogDescription = doc.querySelector('meta[property="og:description"]')?.content || doc.querySelector('meta[name="description"]')?.content;
 
         if (ogTitle && !titleInput.value) titleInput.value = ogTitle;
-        if (ogImage && !imageInput.value) imageInput.value = ogImage;
+        if (ogImage && !imageInput.value) {
+            imageInput.value = ogImage;
+            updateImagePreview();
+        }
         if (ogDescription && !summaryInput.value) summaryInput.value = ogDescription;
 
         showToast("정보를 성공적으로 가져왔습니다! 🎉");
@@ -284,6 +300,7 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
         console.error("업로드/수정 실패:", error);
         showToast("⚠️ 오류가 발생했습니다.");
         submitBtn.disabled = false;
-        submitBtn.textContent = editDocId ? "수정 완료" : "공유하기";
+        // ★ 버튼 텍스트 복구 시에도 '업로드'로 변경
+        submitBtn.textContent = editDocId ? "수정 완료" : "업로드";
     }
 });
