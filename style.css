@@ -1599,3 +1599,41 @@ input[type="checkbox"]:hover {
 }
 
 
+/* style.css 맨 아래에 추가 */
+
+/* 더 보기 버튼 컨테이너 */
+#load-more-container {
+    text-align: center;
+    margin: 40px 0 60px; /* 위아래 여백 */
+    display: none; /* 기본적으로는 숨김 (데이터가 있을 때만 킴) */
+}
+
+/* 더 보기 버튼 스타일 */
+#load-more-btn {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+#load-more-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #bbb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#load-more-btn:disabled {
+    color: #aaa;
+    background-color: #eee;
+    cursor: not-allowed;
+    transform: none;
+}
+
+

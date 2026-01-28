@@ -12,6 +12,11 @@ let allData = [];
 let mySavedIds = new Set();
 let currentSort = 'id-desc';
 
+// ★ 페이지네이션 변수
+let currentFilteredData = []; // 현재 필터링된 전체 데이터
+let currentRenderCount = 0;   // 현재 화면에 그려진 개수
+const BATCH_SIZE = 12;        // 한 번에 보여줄 개수
+
 let currentCategory = sessionStorage.getItem('selectedCategory') || 'all'; 
 
 const STANDARD_CATEGORIES = [
@@ -105,11 +110,22 @@ document.addEventListener('DOMContentLoaded', () => {
             filterAndRender(keyword);
         });
     }
+
+    // ★ [추가됨] 더 보기 버튼 이벤트 리스너
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            renderNextBatch();
+        });
+    }
 });
 
 async function refreshContent() {
     const cardWrapper = document.querySelector('.card-wrapper');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    
     cardWrapper.innerHTML = getSkeletonHTML(); 
+    if(loadMoreContainer) loadMoreContainer.style.display = 'none'; // 로딩 중 버튼 숨김
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -164,8 +180,9 @@ function sortAllData() {
 
 function filterAndRender(keyword) {
     const cardWrapper = document.querySelector('.card-wrapper');
-    cardWrapper.innerHTML = '';
-
+    const loadMoreContainer = document.getElementById('load-more-container');
+    
+    // 1. 필터링 로직 (기존과 동일)
     const filtered = allData.filter(item => {
         if (currentCategory !== 'all') {
             if (currentCategory === '기타') {
@@ -182,23 +199,54 @@ function filterAndRender(keyword) {
         return searchableText.includes(keyword);
     });
 
+    // 2. ★ 결과 저장 및 초기화
+    currentFilteredData = filtered; // 전역 변수에 저장
+    currentRenderCount = 0;         // 렌더링 카운트 초기화
+    cardWrapper.innerHTML = '';     // 화면 비우기
+
     const resultIds = filtered.map(item => item.id);
     sessionStorage.setItem('currentResults', JSON.stringify(resultIds));
 
+    // 3. 결과가 없을 때
     if (filtered.length === 0) {
         cardWrapper.innerHTML = `
             <div class="empty-message">
                 <p>아직 등록된 레퍼런스가 없어요.</p>
                 <p style="font-size: 0.9em; color: #888; margin-top: 5px;">이 키워드의 첫 번째 발견자가 되어주세요! 🕵️‍♀️</p>
             </div>`;
+        if(loadMoreContainer) loadMoreContainer.style.display = 'none';
         return;
     }
 
-    filtered.forEach(data => {
+    // 4. ★ 첫 배치는 즉시 렌더링
+    renderNextBatch();
+}
+
+// ★ [추가됨] 다음 배치 렌더링 함수
+function renderNextBatch() {
+    const cardWrapper = document.querySelector('.card-wrapper');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+
+    // 다음 12개 데이터 가져오기
+    const nextBatch = currentFilteredData.slice(currentRenderCount, currentRenderCount + BATCH_SIZE);
+    
+    nextBatch.forEach(data => {
         const isSaved = mySavedIds.has(data.id);
         const card = createReferenceCard(data, isSaved);
         cardWrapper.appendChild(card);
     });
+
+    // 카운트 업데이트
+    currentRenderCount += nextBatch.length;
+
+    // 더 보여줄 데이터가 남았는지 확인
+    if (currentRenderCount >= currentFilteredData.length) {
+        if(loadMoreContainer) loadMoreContainer.style.display = 'none';
+    } else {
+        if(loadMoreContainer) loadMoreContainer.style.display = 'block';
+        if(loadMoreBtn) loadMoreBtn.textContent = '더 보기 ⬇️';
+    }
 }
 
 function createReferenceCard(data, isSaved) {
@@ -265,7 +313,6 @@ window.toggleSave = async function(refId, btnElement) {
     openSaveModal(refId, btnElement);
 };
 
-// ★ 모달 로직 (정렬 기능 추가됨)
 async function openSaveModal(refId, btnElement) {
     const modal = document.getElementById('save-modal-overlay');
     const select = document.getElementById('modal-folder-select');
@@ -285,20 +332,17 @@ async function openSaveModal(refId, btnElement) {
         const q = query(collection(db, "folders"), where("uid", "==", user.uid));
         const snapshot = await getDocs(q);
         
-        // ★ [정렬 추가] 데이터를 배열로 만든 뒤 시간순(오래된 순) 정렬
         let folders = [];
         snapshot.forEach(doc => {
             folders.push({ id: doc.id, ...doc.data() });
         });
         
-        // 정렬 로직 (createdAt 기준 오름차순)
         folders.sort((a, b) => {
             if (a.createdAt < b.createdAt) return -1;
             if (a.createdAt > b.createdAt) return 1;
             return 0;
         });
 
-        // 렌더링
         select.innerHTML = ''; 
         
         const allOption = document.createElement('option');
