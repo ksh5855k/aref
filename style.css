@@ -1637,3 +1637,109 @@ input[type="checkbox"]:hover {
 }
 
 
+/* style.css 맨 아래에 추가 */
+
+/* =========================================
+   📱 모바일 반응형 (max-width: 768px)
+   ========================================= */
+@media (max-width: 768px) {
+    
+    /* 1. 헤더: 로고와 검색창을 세로로 배치 */
+    .sticky-header {
+        padding: 15px;
+        flex-direction: column;
+        gap: 15px;
+        height: auto; /* 고정 높이 해제 */
+    }
+
+    .header-left {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .search-container {
+        width: 100%; /* 검색창 꽉 차게 */
+        max-width: none;
+    }
+    
+    #search-input {
+        width: 100%;
+    }
+
+    /* 우측 버튼들 (로그인/내서랍 등) */
+    #auth-container {
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+
+    /* 2. 메인 컨테이너 여백 조정 */
+    .main-container, .upload-container, .detail-container, .drawer-container {
+        padding: 0 15px;
+        margin-top: 20px;
+    }
+
+    /* 3. 탭 버튼 & 필터 바 */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .tabs {
+        overflow-x: auto; /* 가로 스크롤 허용 */
+        white-space: nowrap;
+        padding-bottom: 5px;
+        -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
+    }
+
+    .sort-dropdown {
+        width: 100%; /* 정렬 드롭다운 꽉 차게 */
+    }
+
+    /* 4. 카드 리스트: 1줄에 1개씩 */
+    .card-wrapper, .reference-list {
+        grid-template-columns: 1fr; /* 한 줄에 무조건 1개 */
+        gap: 20px;
+    }
+
+    /* 5. 업로드 페이지 */
+    .form-group {
+        flex-direction: column;
+    }
+    
+    #fetch-btn, #upload-image-btn {
+        width: 100% !important; /* 버튼들 꽉 차게 */
+    }
+
+    /* 6. 상세 페이지 */
+    .detail-content {
+        flex-direction: column;
+    }
+
+    .detail-image {
+        max-height: 300px;
+    }
+
+    /* 7. 내 서랍 툴바 */
+    .bulk-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .bulk-toolbar select, .bulk-toolbar button {
+        width: 100%;
+        max-width: none;
+    }
+
+    /* 8. 모달창 */
+    .save-modal {
+        width: 90%;
+        padding: 20px;
+    }
+}
+
+
