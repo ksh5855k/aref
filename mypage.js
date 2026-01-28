@@ -52,6 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
+            // ★ 수정됨: 로그아웃 버튼을 눌러서 나가는 중이라면 경고창 무시
+            if (sessionStorage.getItem('isLoggingOut')) {
+                sessionStorage.removeItem('isLoggingOut'); // 깃발 제거
+                return; // 아무것도 안 하고 조용히 있음 (auth-status.js가 페이지 이동시킴)
+            }
+
             alert("로그인이 필요한 서비스입니다.");
             window.location.href = "login.html";
             return;

@@ -568,7 +568,6 @@ footer {
 }
 
 
-/* style.css 맨 아래 추가 */
 
 /* 유튜브 영상 16:9 반응형 컨테이너 */
 .video-wrapper {
@@ -592,7 +591,6 @@ footer {
 }
 
 
-/* style.css 맨 아래 추가: 토스트 알림 디자인 */
 #toast-container {
     position: fixed;
     bottom: 30px;
@@ -626,7 +624,6 @@ footer {
 }
 
 
-/* style.css 수정: 태그에 마우스 올리면 손가락 모양 나오게 */
 .tag {
     display: inline-block;
     background-color: #ffe7eb;
@@ -645,7 +642,6 @@ footer {
 }
 
 
-/* style.css 맨 아래 추가: 내 서랍(보관함) 페이지 디자인 */
 .drawer-header {
     background-color: #f9f9f9;
     padding: 40px 0;
@@ -666,7 +662,6 @@ footer {
 }
 
 
-/* style.css 맨 아래에 추가해주세요 */
 
 /* --- 상세 페이지 상단 네비게이션 (목록으로/이전/다음) --- */
 .navigation-bar {
@@ -756,7 +751,6 @@ footer {
 .delete-btn:hover { background: #ff4d4d; color: white; }
 
 
-/* style.css 맨 아래에 추가 (상세 페이지 버튼 디자인) */
 
 /* 상단 네비게이션 (목록으로 / 이전 / 다음) */
 .navigation-bar {
@@ -839,7 +833,6 @@ footer {
 .delete-btn:hover { background: #ff4d4d; color: white; }
 
 
-/* style.css 맨 아래 추가: 스켈레톤 로딩 애니메이션 */
 
 /* 1. 반짝이는 효과 (Shimmer) */
 @keyframes shimmer {
@@ -896,10 +889,6 @@ footer {
 
 
 
-
-
-/* style.css 맨 아래 추가: 필터 바 & 카테고리 탭 */
-
 .filter-bar {
     max-width: 1200px;
     margin: 20px auto;
@@ -950,7 +939,6 @@ footer {
 }
 
 
-/* style.css 맨 아래 추가: 댓글 섹션 디자인 */
 
 .comment-section {
     margin-top: 50px;
@@ -1053,7 +1041,6 @@ footer {
 .comment-delete-btn:hover { color: #ff4d4d; }
 
 
-/* style.css 맨 아래에 추가 */
 
 /* 저장 모달 오버레이 (배경 어둡게) */
 .modal-overlay {
@@ -1124,7 +1111,6 @@ footer {
 .btn-confirm { background: #333; color: white; }
 
 
-/* style.css 맨 아래 추가 */
 
 /* 새 폴더 입력창: 평소에는 숨김 */
 #modal-new-folder-input {
@@ -1133,7 +1119,6 @@ footer {
 }
 
 
-/* style.css 맨 아래에 추가하세요 */
 
 /* 필수 입력 라벨 옆에 붉은 별표 자동 생성 */
 .required-label::after {
@@ -1145,3 +1130,275 @@ footer {
     vertical-align: middle;
     line-height: 1;
 }
+
+
+
+/* 로그인/회원가입 페이지 전용 스타일 */
+.auth-page-body {
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+.auth-card {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    text-align: center;
+    border: 1px solid #eee;
+}
+
+.auth-logo {
+    text-decoration: none;
+    color: #333;
+    font-size: 2rem;
+    font-weight: 900;
+    display: block;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.auth-desc {
+    color: #888;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.auth-input:focus {
+    border-color: #333;
+    outline: none;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 15px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+.auth-btn:hover {
+    background: #000;
+}
+
+.auth-link {
+    display: block;
+    margin-top: 20px;
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.auth-link strong {
+    color: #333;
+    text-decoration: underline;
+}
+
+.auth-footer {
+    margin-top: 40px;
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+
+
+/* 로그인/회원가입 페이지 전용 스타일 */
+.auth-page-body {
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+.auth-card {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    border: 1px solid #eee;
+}
+
+.auth-logo {
+    text-decoration: none;
+    color: #333;
+    font-size: 2rem;
+    font-weight: 900;
+    display: block;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.auth-desc {
+    color: #888;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.auth-input:focus {
+    border-color: #333;
+    outline: none;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 15px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+.auth-btn:hover {
+    background: #000;
+}
+
+.auth-link {
+    display: block;
+    margin-top: 20px;
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.auth-link strong {
+    color: #333;
+    text-decoration: underline;
+}
+
+.auth-footer {
+    margin-top: 40px;
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+
+
+/* 비밀번호 보기/숨기기 버튼용 래퍼 */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* 눈 모양 버튼 스타일 */
+.password-toggle-btn {
+    position: absolute;
+    right: 15px;
+    top: 22px; /* input padding과 margin 고려하여 위치 조정 */
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #888;
+    padding: 0;
+    width: auto !important; /* auth-btn 스타일 덮어쓰기 방지 */
+    margin: 0 !important;
+}
+
+.password-toggle-btn:hover {
+    color: #333;
+}
+
+
+
+/* 헤더 우측 로그인/회원가입/내서랍 영역 디자인 */
+#auth-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* "OOO님" 텍스트 */
+.user-name {
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 600;
+    margin-right: 5px;
+}
+
+/* 헤더에 들어가는 버튼 공통 스타일 (로그인, 내서랍, 로그아웃) */
+.header-btn {
+    padding: 8px 16px;
+    background-color: #333; /* 검은색 배경 */
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: inline-block;
+}
+
+.header-btn:hover {
+    background-color: #555;
+}
+
+/* 로그아웃 버튼만 약간 다르게 (선택사항: 회색 톤) */
+.logout-btn-style {
+    background-color: #f1f3f5;
+    color: #555;
+}
+.logout-btn-style:hover {
+    background-color: #e9ecef;
+}
+
+/* 비밀번호 눈 아이콘 SVG 스타일 */
+.password-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: #999;
+    vertical-align: middle;
+}
+.password-toggle-btn:hover svg {
+    fill: #333;
+}
+
+
