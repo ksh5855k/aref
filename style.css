@@ -1743,3 +1743,62 @@ input[type="checkbox"]:hover {
 }
 
 
+/* style.css 맨 아래에 추가 */
+
+/* 맨 위로 가기 버튼 */
+#back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: #333; /* 검은색 배경 */
+    color: white;
+    border: none;
+    border-radius: 50%; /* 둥근 모양 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+    z-index: 999; /* 제일 위에 뜨게 */
+    
+    /* 정중앙 정렬 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* 애니메이션 효과 */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+/* 스크롤을 내렸을 때 활성화되는 클래스 */
+#back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+#back-to-top:hover {
+    background-color: #555;
+    transform: translateY(-3px); /* 살짝 떠오르는 효과 */
+}
+
+/* 버튼 안의 화살표 아이콘 */
+#back-to-top svg {
+    width: 24px;
+    height: 24px;
+    fill: white;
+}
+
+/* 모바일에서는 버튼 위치 살짝 조정 */
+@media (max-width: 768px) {
+    #back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+    }
+}
+
+
