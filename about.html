@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서비스 소개 - A!Ref</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .about-container { max-width: 800px; margin: 60px auto; padding: 0 20px; text-align: center; }
+        .about-header h1 { font-size: 3rem; margin-bottom: 20px; font-weight: 900; }
+        .about-header p { font-size: 1.2rem; color: #666; line-height: 1.6; }
+        .about-content { margin-top: 60px; text-align: left; }
+        .about-card { background: #f8f9fa; padding: 40px; border-radius: 20px; margin-bottom: 30px; }
+        .about-card h3 { font-size: 1.5rem; margin-bottom: 15px; color: #333; }
+        .about-card p { color: #555; line-height: 1.7; }
+        .highlight { color: #ff4757; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <h2>A!Ref Menu</h2>
+            <button class="close-sidebar-btn" id="close-sidebar">&times;</button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="index.html">🏠 홈 (Home)</a></li>
+            <li><a href="about.html">📖 서비스 소개 (About)</a></li>
+            <li><a href="contact.html">💬 문의/건의 (Contact)</a></li>
+            <li style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;"></li> <li><a href="mypage.html">📂 내 서랍 (My Drawer)</a></li>
+            <li><a href="profile.html">⚙️ 내 계정 (My Account)</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <p>From ? To !<br>&copy; 2026 A!Ref</p>
+        </div>
+    </aside>
+
+    <header class="sticky-header">
+        <div class="header-left">
+            <button class="menu-btn" id="menu-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
+            </div>
+        <div id="auth-container"></div>
+    </header>
+
+    <div class="about-container">
+        <div class="about-header">
+            <h1>From ? To !</h1>
+            <p>
+                마케터와 기획자의 머릿속엔 늘 <span class="highlight">물음표(?)</span>가 떠다닙니다.<br>
+                "이 기획이 맞을까?", "더 좋은 레퍼런스는 없을까?"
+            </p>
+        </div>
+
+        <div class="about-content">
+            <div class="about-card">
+                <h3>🔍 기획의 시작, 레퍼런스</h3>
+                <p>
+                    위대한 기획은 모방과 변형에서 시작됩니다. 
+                    하지만 좋은 레퍼런스를 찾는 일은 모래사장에서 바늘 찾기처럼 고단합니다.
+                    A!Ref은 흩어진 영감들을 한곳에 모아, 여러분의 시간을 아껴드리고자 합니다.
+                </p>
+            </div>
+
+            <div class="about-card">
+                <h3>📂 나만의 인사이트 서랍</h3>
+                <p>
+                    단순히 보는 것에서 멈추지 마세요. 
+                    마음에 드는 레퍼런스를 <strong>'내 서랍'</strong>에 담고, 
+                    나만의 폴더로 정리하며 인사이트를 자산으로 만드세요.
+                </p>
+            </div>
+
+            <div class="about-card">
+                <h3>🚀 우리의 목표</h3>
+                <p>
+                    우리는 여러분의 기획서 마지막 장에 <span class="highlight">확신의 느낌표(!)</span>가 찍히는 순간을 응원합니다.
+                    지금 바로 A!Ref과 함께 더 나은 기획을 시작해 보세요.
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 50px;">
+                <a href="index.html" style="background: #333; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold;">레퍼런스 보러 가기</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 A!Ref. All Rights Reserved.</p>
+    </footer>
+
+    <script type="module" src="sidebar.js"></script>
+    <script type="module" src="auth-status.js"></script>
+</body>
+</html>

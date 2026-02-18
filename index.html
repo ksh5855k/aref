@@ -7,17 +7,47 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <h2>A!Ref Menu</h2>
+            <button class="close-sidebar-btn" id="close-sidebar">&times;</button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="index.html">🏠 홈 (Home)</a></li>
+            <li><a href="about.html">📖 서비스 소개 (About)</a></li>
+            <li><a href="contact.html">💬 문의/건의 (Contact)</a></li>
+            <li style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;"></li> <li><a href="mypage.html">📂 내 서랍 (My Drawer)</a></li>
+            <li><a href="profile.html">⚙️ 내 계정 (My Account)</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <p>From ? To !<br>&copy; 2026 A!Ref</p>
+        </div>
+    </aside>
+
     <header class="sticky-header">
         <div class="header-left">
+            <button class="menu-btn" id="menu-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
             <a href="index.html" class="logo-link" onclick="sessionStorage.clear();"><h1>A!Ref</h1></a>
             <div class="search-container">
-                <input type="text" id="search-input" placeholder="키워드, 태그, 본문 내용 검색..." autocomplete="off">
+                <input type="text" id="search-input" placeholder="키워드, 태그 검색..." autocomplete="off">
                 <span class="search-icon">🔍</span>
             </div>
         </div>
         <div id="auth-container">
-            </div>
+        </div>
     </header>
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <h2>From ? To !</h2>
+            <p>막막한 기획의 물음표가 확신의 느낌표로 바뀌는 곳.<br>
+            A!Ref에서 세상의 모든 레퍼런스를 탐험하세요.</p>
+            <a href="about.html" class="hero-btn">서비스 소개 보기 👉</a>
+        </div>
+    </section>
 
     <div class="main-container">
         <div class="filter-bar">
@@ -55,7 +85,6 @@
                 <select id="modal-folder-select" class="modal-select">
                     <option value="all">기본 보관함 (전체)</option>
                 </select>
-                
                 <input type="text" id="modal-new-folder-input" class="modal-input" placeholder="새 폴더 이름 입력 (선택사항)">
             </div>
             <div class="modal-buttons">
@@ -69,6 +98,7 @@
         <p>&copy; 2026 A!Ref. All Rights Reserved.</p>
     </footer>
 
+    <script type="module" src="sidebar.js"></script>
     <script type="module" src="script.js"></script>
     <script type="module" src="auth-status.js"></script>
     <script type="module" src="scroll-top.js"></script>

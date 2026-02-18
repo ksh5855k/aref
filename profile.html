@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 계정 설정 - A!Ref</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <h2>A!Ref Menu</h2>
+            <button class="close-sidebar-btn" id="close-sidebar">&times;</button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="index.html">🏠 홈 (Home)</a></li>
+            <li><a href="about.html">📖 서비스 소개 (About)</a></li>
+            <li><a href="contact.html">💬 문의/건의 (Contact)</a></li>
+            <li style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;"></li>
+            <li><a href="mypage.html">📂 내 서랍 (My Drawer)</a></li>
+            <li><a href="profile.html">⚙️ 내 계정 (My Account)</a></li>
+        </ul>
+        <div class="sidebar-footer"><p>From ? To !<br>&copy; 2026 A!Ref</p></div>
+    </aside>
+
+    <header class="sticky-header">
+        <div class="header-left">
+            <button class="menu-btn" id="menu-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <a href="index.html" class="logo-link"><h1>A!Ref</h1></a>
+        </div>
+        <div id="auth-container"></div>
+    </header>
+
+    <div class="profile-container">
+        <div class="profile-card">
+            <div class="profile-avatar-container" onclick="document.getElementById('profile-img-input').click()">
+                <img id="profile-avatar-img" src="https://placehold.co/100x100?text=User" class="profile-avatar" alt="프로필 사진">
+                <div class="avatar-edit-overlay">📷</div>
+            </div>
+            <input type="file" id="profile-img-input" accept="image/*" style="display: none;">
+
+            <h2 class="profile-name" id="display-nickname">Loading...</h2>
+            <p class="profile-email" id="display-email">user@example.com</p>
+        </div>
+
+        <div class="profile-settings">
+            <h3 class="settings-section-title">✏️ 닉네임 수정</h3>
+            
+            <div class="profile-form-grid" style="grid-template-columns: 1fr;"> <div class="full-width">
+                    <label class="profile-label">닉네임</label>
+                    <input type="text" id="input-nickname" class="profile-input" placeholder="나를 표현하는 닉네임">
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="reset-pw-btn" class="btn-secondary">🔒 비밀번호 변경 메일</button>
+                <button id="save-btn" class="btn-primary">저장하기</button>
+            </div>
+
+            <button id="delete-account-btn" class="btn-danger">회원 탈퇴하기</button>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="modal-overlay">
+        <div class="save-modal" style="text-align: center;">
+            <h3 style="color: #ff4757;">⚠️ 정말 탈퇴하시겠습니까?</h3>
+            <p style="color: #666; margin-bottom: 20px; font-size: 0.9rem;">
+                본인 확인을 위해 비밀번호를 입력해주세요.<br>
+                탈퇴 시 모든 데이터는 즉시 삭제되며 복구할 수 없습니다.
+            </p>
+            <input type="password" id="delete-password" class="pw-modal-input" placeholder="비밀번호 입력">
+            
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="modal-btn btn-cancel" onclick="document.getElementById('delete-modal').style.display='none'">취소</button>
+                <button class="modal-btn btn-confirm" id="confirm-delete-btn" style="background-color: #ff4757;">탈퇴하기</button>
+            </div>
+        </div>
+    </div>
+
+    <footer><p>&copy; 2026 A!Ref. All Rights Reserved.</p></footer>
+
+    <script type="module" src="sidebar.js"></script>
+    <script type="module" src="auth-status.js"></script>
+    <script type="module" src="profile.js"></script>
+</body>
+</html>

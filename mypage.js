@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1. [기존] '전체 선택' 체크박스 클릭 시 -> 하위 카드들 모두 선택/해제
+    // 전체 선택 체크박스
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', (e) => {
@@ -60,15 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ★ [추가됨] 개별 카드 체크박스 클릭 시 -> '전체 선택' 체크박스 상태 동기화
+    // 개별 체크박스 -> 전체 선택 동기화
     if (drawerList) {
         drawerList.addEventListener('change', (e) => {
-            // 클릭된 요소가 카드의 체크박스라면
             if (e.target.classList.contains('card-checkbox')) {
                 const totalCheckboxes = document.querySelectorAll('.card-checkbox').length;
                 const checkedCheckboxes = document.querySelectorAll('.card-checkbox:checked').length;
                 
-                // 전체 개수와 체크된 개수가 같으면 '전체 선택' ON, 아니면 OFF
                 if (selectAllCheckbox) {
                     selectAllCheckbox.checked = (totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
                 }
@@ -76,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 일괄 이동 버튼 이벤트
+    // 일괄 이동 버튼
     const bulkMoveBtn = document.getElementById('bulk-move-btn');
     if (bulkMoveBtn) {
         bulkMoveBtn.addEventListener('click', async () => {
@@ -98,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 일괄 삭제 버튼 이벤트
+    // 일괄 삭제 버튼
     const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
     if (bulkDeleteBtn) {
         bulkDeleteBtn.addEventListener('click', async () => {
@@ -151,7 +149,7 @@ async function bulkMoveItems(saveDocIds, folderId) {
         showToast("📦 이동되었습니다!");
         
         loadSavedData(auth.currentUser);
-        // 작업 후 전체선택 해제
+        
         const selectAllCheckbox = document.getElementById('select-all-checkbox');
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
 
@@ -292,16 +290,19 @@ function switchFolder(folderId) {
     renderFolderTabs(); 
     renderDrawer(); 
     
-    // 폴더 변경 시 전체 선택 해제
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
     if (selectAllCheckbox) selectAllCheckbox.checked = false;
 }
 
+// ★ [수정됨] 데이터 로드 및 멘트 업데이트
 async function loadSavedData(user) {
     const drawerList = document.getElementById('my-drawer-list');
     try {
         const mySaveQ = query(collection(db, "userSaves"), where("uid", "==", user.uid));
         const mySaveSnapshot = await getDocs(mySaveQ);
+
+        // ★ 여기서 멘트 업데이트 (저장된 개수 기반)
+        updateDrawerMessage(mySaveSnapshot.size);
 
         if (mySaveSnapshot.empty) {
             renderDrawer();
@@ -343,6 +344,29 @@ async function loadSavedData(user) {
         console.error("데이터 로드 실패:", error);
         drawerList.innerHTML = `<p class="error-message">오류 발생: ${error.message}</p>`;
     }
+}
+
+// ★ [추가됨] 멘트 생성 함수
+function updateDrawerMessage(count) {
+    const subtitleEl = document.getElementById('drawer-subtitle');
+    if (!subtitleEl) return;
+
+    const numHtml = `<span class="highlight-num">${count}</span>`;
+    let message = "";
+
+    if (count === 0) {
+        message = "텅 빈 서랍, 당신의 첫 번째 영감을 기다립니다.";
+    } else if (count < 10) {
+        message = `막막했던 기획안에 ${numHtml}개의 실마리가 생겼습니다.`;
+    } else if (count < 30) {
+        message = `누구도 반박 못 할 ${numHtml}가지 단단한 근거를 확보했네요.`;
+    } else if (count < 50) {
+        message = `팀원들을 설득할 ${numHtml}개의 강력한 무기가 준비되었습니다.`;
+    } else {
+        message = `이제 ${numHtml}개의 인사이트가 당신의 기획을 증명합니다.`;
+    }
+
+    subtitleEl.innerHTML = message;
 }
 
 function renderDrawer() {
@@ -459,6 +483,8 @@ window.removeFromDrawer = async function(refId, saveDocId, btnElement) {
             savedDataList = savedDataList.filter(item => item.id != refId);
             renderDrawer(); 
             showToast("내 서랍에서 삭제되었습니다.");
+            // ★ 삭제 시 개수가 바뀌므로 멘트도 갱신
+            updateDrawerMessage(savedDataList.length);
         }, 300);
 
     } catch (error) {

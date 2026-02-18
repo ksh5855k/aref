@@ -30,8 +30,23 @@
             <input type="text" id="upload-tags" placeholder="예: #영상미, #유머, #MZ세대">
 
             <label for="upload-image-url">이미지 주소(URL)</label>
-            <input type="url" id="upload-image-url" placeholder="이미지 주소(https://...)를 붙여넣으세요">
+            <div style="display: flex; width: 100%; gap: 8px; align-items: center; box-sizing: border-box; margin-bottom: 8px;">
+                 <input type="url" id="upload-image-url" placeholder="이미지 주소(https://...)를 붙여넣으세요" required 
+                        style="flex-grow: 1; width: 0 !important; min-width: 0; height: 50px !important; padding: 0 15px; margin-bottom: 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px;">
+                
+                <input type="file" id="image-file-input" accept="image/*" style="display: none;">
+                
+                <button type="button" id="upload-image-btn" style="flex-shrink: 0; width: auto !important; height: 50px !important; padding: 0 20px; background: #fff; color: #333; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; white-space: nowrap; font-weight: bold; font-size: 0.95rem; margin-bottom: 0; box-sizing: border-box;">📁 파일 변경</button>
+            </div>
+            
+            <p style="font-size: 0.85em; color: #888; margin-top: 0; margin-bottom: 15px;">
+                💡 직접 파일을 올리거나, 이미지 주소를 복사해서 붙여넣으세요.
+            </p>
 
+            <div id="image-preview-container" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #eee; text-align: center; display: none;">
+                <span class="preview-label" style="display: block; font-size: 0.85rem; color: #888; margin-bottom: 10px; text-align: left;">이미지 미리보기</span>
+                <img id="image-preview" src="" alt="미리보기 이미지" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); object-fit: contain;">
+            </div>
             <label for="upload-link">원본 링크</label>
             <input type="url" id="upload-link" placeholder="원본 사이트 링크 (https://...)" required>
 
@@ -44,7 +59,10 @@
             <label for="upload-detail-how">How to apply</label>
             <textarea id="upload-detail-how" placeholder="실제 기획에 어떻게 적용할 수 있을지 입력하세요" rows="5"></textarea>
 
-            <button type="submit" id="submit-btn">수정 완료</button>
+            <div class="button-group" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="button" id="cancel-btn" style="flex: 1; background: #f1f3f5; color: #555; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem;">취소</button>
+                <button type="submit" id="submit-btn" style="flex: 2;">수정 완료</button>
+            </div>
         </form>
     </div>
 

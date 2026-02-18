@@ -1,6 +1,6 @@
 import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, doc, deleteDoc, updateDoc, increment, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getFirestore, doc, deleteDoc, updateDoc, increment, collection, query, where, getDocs, addDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { showToast } from './toast.js';
 
@@ -8,7 +8,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 유튜브 ID 추출
 function getYouTubeId(url) {
     if (!url) return null;
     url = url.trim();
@@ -18,15 +17,12 @@ function getYouTubeId(url) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 검색창 엔터키 이벤트
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 const keyword = searchInput.value.trim();
-                if (keyword) {
-                    window.location.href = `index.html?search=${encodeURIComponent(keyword)}`;
-                }
+                if (keyword) window.location.href = `index.html?search=${encodeURIComponent(keyword)}`;
             }
         });
     }
@@ -58,8 +54,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = document.data();
             await updateDoc(document.ref, { views: increment(1) });
             renderDetail(data);
-            
-            // 댓글 불러오기
             loadComments(docId);
         });
 
@@ -67,18 +61,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("상세 정보 로딩 실패:", error);
     }
 
-    // 버튼 요소들
     const saveBtn = document.getElementById('detail-save-btn');
     const deleteBtn = document.getElementById('delete-btn');
     const shareBtn = document.getElementById('share-btn');
     const editBtn = document.getElementById('edit-btn');
-    
-    // 댓글 관련 요소
     const commentForm = document.getElementById('comment-form-container');
     const loginMsg = document.getElementById('login-request-msg');
     const submitCommentBtn = document.getElementById('submit-comment-btn');
 
-    // 링크 복사하기 (기존 유지)
     if (shareBtn) {
         shareBtn.onclick = async () => {
             try {
@@ -91,31 +81,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    // 수정 버튼 클릭 시 이동
     if (editBtn) {
         editBtn.onclick = () => {
             window.location.href = `upload.html?id=${docId}`;
         };
     }
 
-    // 댓글 등록 버튼 클릭 시
     if (submitCommentBtn) {
         submitCommentBtn.onclick = async () => {
             const input = document.getElementById('comment-input');
             const content = input.value.trim();
             const user = auth.currentUser;
 
-            if (!content) {
-                alert("내용을 입력해주세요.");
-                return;
-            }
+            if (!content) { alert("내용을 입력해주세요."); return; }
             if (!user) return;
 
             try {
                 await addDoc(collection(db, "comments"), {
                     referenceId: docId,
                     uid: user.uid,
-                    author: user.email.split('@')[0],
+                    author: user.displayName || user.email.split('@')[0], 
                     content: content,
                     createdAt: new Date().toISOString()
                 });
@@ -131,26 +116,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    // 인증 상태 체크
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             deleteBtn.style.display = 'inline-block';
             editBtn.style.display = 'inline-block';
-            
             if(commentForm) commentForm.style.display = 'flex';
             if(loginMsg) loginMsg.style.display = 'none';
-
             checkIfSaved(user, docId, saveBtn);
-
             saveBtn.onclick = () => toggleSave(user, docId, saveBtn);
             deleteBtn.onclick = () => deleteReference(firestoreDocId);
         } else {
             deleteBtn.style.display = 'none';
             editBtn.style.display = 'none';
-            
             if(commentForm) commentForm.style.display = 'none';
             if(loginMsg) loginMsg.style.display = 'block';
-
             saveBtn.onclick = () => {
                 if(confirm("로그인이 필요한 기능입니다. 로그인 하시겠습니까?")) window.location.href = "login.html";
             };
@@ -159,10 +138,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// 댓글 목록 불러오기 함수
 async function loadComments(refId) {
     const listContainer = document.getElementById('comments-list');
-    const user = auth.currentUser;
+    const currentUser = auth.currentUser;
 
     if (!listContainer) return;
 
@@ -176,56 +154,62 @@ async function loadComments(refId) {
         }
 
         let comments = [];
-        snapshot.forEach(doc => {
-            comments.push({ id: doc.id, ...doc.data() });
-        });
-
-        // 최신순 정렬
+        snapshot.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
         comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         listContainer.innerHTML = ''; 
 
-        comments.forEach(comment => {
+        for (const comment of comments) {
+            let authorName = comment.author;
+            let authorPhoto = "https://placehold.co/40x40?text=User";
+
+            if (comment.uid) {
+                try {
+                    const userDocRef = doc(db, "users", comment.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        if (userData.photoURL) authorPhoto = userData.photoURL;
+                        if (userData.displayName) authorName = userData.displayName;
+                    }
+                } catch (e) {
+                    console.error("작성자 정보 조회 실패", e);
+                }
+            }
+
             const dateStr = new Date(comment.createdAt).toLocaleDateString();
-            const isMyComment = user && user.uid === comment.uid;
-            
-            const deleteBtnHtml = isMyComment 
-                ? `<button class="comment-delete-btn" onclick="deleteComment('${comment.id}', ${refId})">삭제</button>` 
-                : '';
+            const isMyComment = currentUser && currentUser.uid === comment.uid;
+            const deleteBtnHtml = isMyComment ? `<button class="comment-delete-btn" onclick="deleteComment('${comment.id}', ${refId})">삭제</button>` : '';
 
             const div = document.createElement('div');
             div.className = 'comment-item';
             div.innerHTML = `
-                <div class="comment-meta">
-                    <span class="comment-author">${comment.author}</span>
-                    <div style="display:flex; gap:10px;">
-                        <span>${dateStr}</span>
-                        ${deleteBtnHtml}
+                <img src="${authorPhoto}" class="comment-avatar" alt="프로필" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eee; flex-shrink: 0; margin-right: 15px;">
+                <div style="flex-grow: 1;">
+                    <div class="comment-meta" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span class="comment-author" style="font-weight: bold; font-size: 0.95rem; color: #333;">${authorName}</span>
+                        <div style="display:flex; gap:10px; align-items: center;">
+                            <span style="font-size: 0.8rem; color: #999;">${dateStr}</span>
+                            ${deleteBtnHtml}
+                        </div>
                     </div>
+                    <div class="comment-text" style="font-size: 0.95rem; color: #555; line-height: 1.5;">${escapeHtml(comment.content)}</div>
                 </div>
-                <div class="comment-text">${escapeHtml(comment.content)}</div>
             `;
             listContainer.appendChild(div);
-        });
+        }
 
     } catch (error) {
-        console.error("댓글 로딩 중 에러:", error);
+        console.error("댓글 로딩 에러:", error);
         listContainer.innerHTML = '<p class="error-message">댓글을 불러오지 못했습니다.</p>';
     }
 }
 
-// XSS 방지용
 function escapeHtml(text) {
     if (!text) return "";
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-// 댓글 삭제 함수
 window.deleteComment = async function(commentId, refId) {
     if (confirm("댓글을 삭제하시겠습니까?")) {
         try {
@@ -239,12 +223,15 @@ window.deleteComment = async function(commentId, refId) {
     }
 };
 
+// ★ [수정됨] 없는 ID(detail-summary-long) 제거하고 내용 통합
 function renderDetail(data) {
     document.getElementById('detail-category').textContent = data.category;
     document.getElementById('detail-title').textContent = data.title;
-    document.getElementById('detail-summary').textContent = data.summary;
     
-    document.getElementById('detail-summary-long').textContent = data.detailSummary || data.summary;
+    // 내용 요약: detailSummary가 없으면 summary 사용
+    const summaryText = data.detailSummary || data.summary;
+    document.getElementById('detail-summary').textContent = summaryText;
+    
     document.getElementById('detail-why').textContent = data.detailWhy || "내용 없음";
     document.getElementById('detail-how').textContent = data.detailHow || "내용 없음";
     
@@ -254,27 +241,11 @@ function renderDetail(data) {
 
     if (videoId) {
         videoContainer.style.display = 'block';
-        videoContainer.innerHTML = `
-            <iframe 
-                width="100%" 
-                height="100%" 
-                src="https://www.youtube.com/embed/${videoId}" 
-                title="YouTube video player" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-            </iframe>
-        `;
+        videoContainer.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:12px; height:400px;"></iframe>`;
         imgEl.style.display = 'none';
     } else {
         videoContainer.style.display = 'none';
-        videoContainer.innerHTML = '';
-        
         imgEl.style.display = 'block';
-        imgEl.onerror = function() {
-            this.onerror = null;
-            this.src = "https://placehold.co/600x400?text=No+Image";
-        };
         imgEl.src = data.image || "https://placehold.co/600x400?text=No+Image";
     }
 
@@ -284,14 +255,11 @@ function renderDetail(data) {
         const span = document.createElement('span');
         span.className = 'tag';
         span.textContent = tag;
-        span.onclick = () => {
-            window.location.href = `index.html?search=${encodeURIComponent(tag)}`;
-        };
+        span.onclick = () => window.location.href = `index.html?search=${encodeURIComponent(tag)}`;
         tagContainer.appendChild(span);
     });
 
-    const linkBtn = document.getElementById('go-link-btn');
-    linkBtn.onclick = () => window.open(data.link, '_blank');
+    document.getElementById('go-link-btn').onclick = () => window.open(data.link, '_blank');
 }
 
 function setupNavigation(currentId) {
@@ -299,7 +267,7 @@ function setupNavigation(currentId) {
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
 
-    if(backBtn) backBtn.onclick = () => window.location.href = "index.html";
+    backBtn.onclick = () => window.location.href = "index.html";
 
     const searchResults = JSON.parse(sessionStorage.getItem('currentResults') || '[]');
     const currentIndex = searchResults.indexOf(currentId);
@@ -308,16 +276,12 @@ function setupNavigation(currentId) {
         if (currentIndex > 0) {
             prevBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex - 1]}`;
             prevBtn.disabled = false;
-        } else {
-            prevBtn.disabled = true;
-        }
+        } else { prevBtn.disabled = true; }
 
         if (currentIndex < searchResults.length - 1) {
             nextBtn.onclick = () => window.location.href = `detail.html?id=${searchResults[currentIndex + 1]}`;
             nextBtn.disabled = false;
-        } else {
-            nextBtn.disabled = true;
-        }
+        } else { nextBtn.disabled = true; }
     } else {
         prevBtn.style.visibility = 'hidden';
         nextBtn.style.visibility = 'hidden';
@@ -328,14 +292,13 @@ async function checkIfSaved(user, refId, btnElement) {
     try {
         const q = query(collection(db, "userSaves"), where("uid", "==", user.uid), where("referenceId", "==", refId));
         const snapshot = await getDocs(q);
-        if (!snapshot.empty) btnElement.textContent = '✅';
-        else btnElement.textContent = '📂';
+        btnElement.textContent = snapshot.empty ? '📂 보관하기' : '✅ 보관됨';
     } catch (e) { console.error(e); }
 }
 
 async function toggleSave(user, refId, btnElement) {
-    const isSaved = btnElement.textContent === '✅';
-    btnElement.textContent = isSaved ? '📂' : '✅'; 
+    const isSaved = btnElement.textContent === '✅ 보관됨';
+    btnElement.textContent = isSaved ? '📂 보관하기' : '✅ 보관됨'; 
 
     try {
         if (isSaved) {
@@ -352,19 +315,19 @@ async function toggleSave(user, refId, btnElement) {
         }
     } catch (error) {
         console.error(error);
-        btnElement.textContent = isSaved ? '✅' : '📂';
+        btnElement.textContent = isSaved ? '✅ 보관됨' : '📂 보관하기';
         showToast("오류가 발생했습니다.");
     }
 }
 
 async function deleteReference(firestoreDocId) {
-    if (confirm("정말로 이 자료를 삭제하시겠습니까? (복구 불가)")) {
+    if (confirm("정말로 이 자료를 삭제하시겠습니까?")) {
         try {
             await deleteDoc(doc(db, "references", firestoreDocId));
             showToast("삭제되었습니다.");
             setTimeout(() => window.location.href = "index.html", 1000);
         } catch (error) {
-            console.error("삭제 실패:", error);
+            console.error(error);
             showToast("삭제 중 오류가 발생했습니다.");
         }
     }
