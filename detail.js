@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
+// ★ 기존 loadComments 함수를 지우고 이 코드로 교체하세요!
 async function loadComments(refId) {
     const listContainer = document.getElementById('comments-list');
     const currentUser = auth.currentUser;
@@ -149,51 +150,80 @@ async function loadComments(refId) {
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
-            listContainer.innerHTML = '<p class="empty-message" style="font-size: 0.9rem;">아직 댓글이 없어요. 첫 번째 인사이트를 남겨주세요! 👇</p>';
+            listContainer.innerHTML = '<div class="empty-message">아직 댓글이 없어요.<br>첫 번째 인사이트를 남겨주세요! 👇</div>';
             return;
         }
 
         let comments = [];
         snapshot.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
+        // 최신순 정렬
         comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         listContainer.innerHTML = ''; 
 
+        // ★ 유저 정보를 임시 저장할 캐시 (데이터베이스 중복 호출 방지 = 로딩 속도 향상)
+        const userCache = {};
+
         for (const comment of comments) {
-            let authorName = comment.author;
+            // 과거 데이터를 위한 기본값 설정
+            let authorName = comment.author || "알 수 없는 사용자"; 
             let authorPhoto = "https://placehold.co/40x40?text=User";
 
+            // ★ Firestore의 users 컬렉션에서 '최신 프로필 정보'를 무조건 덮어씌움
             if (comment.uid) {
-                try {
-                    const userDocRef = doc(db, "users", comment.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        if (userData.photoURL) authorPhoto = userData.photoURL;
-                        if (userData.displayName) authorName = userData.displayName;
+                if (!userCache[comment.uid]) {
+                    try {
+                        const userDocRef = doc(db, "users", comment.uid);
+                        const userDoc = await getDoc(userDocRef);
+                        if (userDoc.exists()) {
+                            userCache[comment.uid] = userDoc.data();
+                        } else {
+                            userCache[comment.uid] = null; // 정보 없음
+                        }
+                    } catch (e) {
+                        console.error("작성자 정보 조회 실패", e);
                     }
-                } catch (e) {
-                    console.error("작성자 정보 조회 실패", e);
+                }
+
+                const userData = userCache[comment.uid];
+                if (userData) {
+                    if (userData.photoURL) authorPhoto = userData.photoURL;
+                    
+                    // 1순위: 현재 설정된 닉네임, 2순위: 이메일 아이디 (닉네임 설정 안 했을 경우)
+                    if (userData.displayName) {
+                        authorName = userData.displayName;
+                    } else if (userData.email) {
+                        authorName = userData.email.split('@')[0];
+                    }
                 }
             }
 
             const dateStr = new Date(comment.createdAt).toLocaleDateString();
             const isMyComment = currentUser && currentUser.uid === comment.uid;
-            const deleteBtnHtml = isMyComment ? `<button class="comment-delete-btn" onclick="deleteComment('${comment.id}', ${refId})">삭제</button>` : '';
+            
+            // 삭제 버튼 깔끔하게 디자인
+            const deleteBtnHtml = isMyComment 
+                ? `<button class="comment-delete-btn" onclick="deleteComment('${comment.id}', ${refId})" style="background:none; border:none; color:#ff4757; cursor:pointer; font-size:0.85rem; font-weight:bold;">삭제</button>` 
+                : '';
 
             const div = document.createElement('div');
             div.className = 'comment-item';
+            div.style.display = 'flex';
+            div.style.gap = '15px';
+            div.style.padding = '25px 0';
+            div.style.borderBottom = '1px solid #f1f3f5';
+            
             div.innerHTML = `
-                <img src="${authorPhoto}" class="comment-avatar" alt="프로필" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eee; flex-shrink: 0; margin-right: 15px;">
+                <img src="${authorPhoto}" class="comment-avatar" alt="프로필" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #eee; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                 <div style="flex-grow: 1;">
-                    <div class="comment-meta" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <span class="comment-author" style="font-weight: bold; font-size: 0.95rem; color: #333;">${authorName}</span>
-                        <div style="display:flex; gap:10px; align-items: center;">
-                            <span style="font-size: 0.8rem; color: #999;">${dateStr}</span>
+                    <div class="comment-meta" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span class="comment-author" style="font-weight: bold; font-size: 1.05rem; color: #333;">${authorName}</span>
+                        <div style="display:flex; gap:12px; align-items: center;">
+                            <span style="font-size: 0.85rem; color: #999;">${dateStr}</span>
                             ${deleteBtnHtml}
                         </div>
                     </div>
-                    <div class="comment-text" style="font-size: 0.95rem; color: #555; line-height: 1.5;">${escapeHtml(comment.content)}</div>
+                    <div class="comment-text" style="font-size: 1.05rem; color: #555; line-height: 1.6;">${escapeHtml(comment.content)}</div>
                 </div>
             `;
             listContainer.appendChild(div);
@@ -201,7 +231,7 @@ async function loadComments(refId) {
 
     } catch (error) {
         console.error("댓글 로딩 에러:", error);
-        listContainer.innerHTML = '<p class="error-message">댓글을 불러오지 못했습니다.</p>';
+        listContainer.innerHTML = '<p class="error-message" style="text-align:center; color:#ff4757;">댓글을 불러오지 못했습니다.</p>';
     }
 }
 

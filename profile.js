@@ -111,15 +111,20 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.disabled = true;
 
         try {
+            // 1. Firebase Auth 프로필 업데이트 (다를 때만)
             if (newNickname !== user.displayName) {
                 await updateProfile(user, { displayName: newNickname });
                 displayNickname.textContent = newNickname;
-                
-                await setDoc(doc(db, "users", user.uid), {
-                    displayName: newNickname
-                }, { merge: true });
             }
-            showToast("프로필이 저장되었습니다! 🎉");
+            
+            // 2. ★ Firestore 데이터베이스에는 무조건 최신화 덮어쓰기! (이게 핵심입니다)
+            await setDoc(doc(db, "users", user.uid), {
+                displayName: newNickname,
+                email: user.email,
+                photoURL: user.photoURL || "https://placehold.co/100x100?text=User"
+            }, { merge: true });
+
+            showToast("프로필이 완벽하게 동기화되었습니다! 🎉");
         } catch (error) {
             console.error("저장 실패:", error);
             showToast("저장 중 오류가 발생했습니다.");
